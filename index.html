@@ -502,8 +502,8 @@
                 </div>
                 <div class="report-client-summary">
                     <p><strong>氏名:</strong> <span id="outName">未設定</span> 様 (<span id="outAttr">-</span>)</p>
-                    <p><strong>相談日:</strong> <span id="outDate">-</span> ｜ <strong>次回予約:</strong> <span id="outNextDate">未設定</span></p>
-                    <p><strong>担当:</strong> <span id="outStaff">-</span></p>
+                    <p><strong>相談日:</strong> <span id="outDate">-</span> ｜ <strong>次回ご予約:</strong> <span id="outNextDate" style="color:var(--accent); font-weight:bold;">未設定</span></p>
+                    <p><strong>担当薬剤師:</strong> <span id="outStaff">-</span></p>
                 </div>
             </div>
 
@@ -513,7 +513,7 @@
                 <div class="chart-box">
                     <canvas id="radarCanvas" width="240" height="240"></canvas>
                     <p style="font-size: 10.5px; color: #555; margin-top: 6px;">【気血水・陰陽バランス】</p>
-                    <div id="compareLegend" style="font-size:10px; color:#b86b28; display:none; margin-top:2px;">■ 赤点線: 直前受診データ比較</div>
+                    <div id="compareLegend" style="font-size:10px; color:#b86b28; display:none; margin-top:2px;">■ 赤点線: 前回カルテ比較</div>
                     <div id="scoreSummaryList" style="text-align: left; font-size: 11px; margin-top: 8px;"></div>
                 </div>
 
@@ -524,9 +524,9 @@
                     <div id="dispenseResultBox" style="display:none; background:#fff; border:1px solid #d5cec2; padding:8px 10px; border-radius:4px; font-size:11px; margin-top:8px;"></div>
 
                     <div class="pharmacy-memo">
-                        <strong>📝 薬局・相談員からのメッセージ / 処方指示:</strong>
+                        <strong>📝 薬局・薬剤師からのメッセージ / 処方指示:</strong>
                         <div id="memoDisplay" style="display:none; margin-top:4px; font-size:11.5px; white-space:pre-wrap;"></div>
-                        <textarea id="memoInput" class="no-print" placeholder="処方した漢方の飲み方や次回までの養生メモを記入..."></textarea>
+                        <textarea id="memoInput" class="no-print" placeholder="処方した漢方の飲み方（食前白湯など）や次回までの養生メモを記入..."></textarea>
                     </div>
                 </div>
             </div>
@@ -558,7 +558,9 @@
 </div>
 
 <script>
-// 内蔵の漢方処方データベース（105処方網羅）
+// ==========================================
+// 1. 漢方処方データベース（105処方網羅）
+// ==========================================
 const KAMPO_DATABASE = [
     { code: "41", name: "補中益気湯（ほちゅうえっきとう）", target: "qi_def", pattern: "虚証", tags: ["疲労倦怠", "食欲不振", "夏バテ", "胃下垂", "寝汗", "病後衰弱"], herbs: "人参, 黄耆, 白朮, 柴胡, 当帰, 升麻, 陳皮, 生姜, 大棗, 甘草" },
     { code: "43", name: "六君子湯（りっくんしとう）", target: "qi_def", pattern: "虚証", tags: ["胃もたれ", "食欲不振", "心窩部つかえ", "消化不良", "胃炎", "逆流性食道炎"], herbs: "人参, 白朮, 茯苓, 半夏, 陳皮, 生姜, 大棗, 甘草" },
@@ -650,10 +652,13 @@ const KAMPO_DATABASE = [
     { code: "101", name: "升麻葛根湯（しょうまかっこんとう）", target: "yin_def", pattern: "虚〜中間証", tags: ["麻疹初期", "初期風邪", "皮膚炎", "口渇"], herbs: "葛根, 升麻, 芍薬, 生姜, 甘草" }
 ];
 
+// ==========================================
+// 2. アプリケーション初期化・状態管理
+// ==========================================
 document.getElementById('recordDate').valueAsDate = new Date();
 
 let currentPatientRecord = {
-    version: "3.6",
+    version: "4.3",
     clientInfo: { clientNo: "", clientName: "", clientAge: "", clientGender: "女性", clientSho: "all", staffName: "" },
     visits: []
 };
@@ -662,24 +667,25 @@ let activeVisitIndex = null;
 
 const categories = [
     { key: 'qi_def', label: '気虚', max: 2, name: '気虚（エネルギー不足）' },
-    { key: 'qi_stag', label: '気滞', max: 2, name: '気滞（ストレス・緊張）' },
-    { key: 'blood_def', label: '血虚', max: 2, name: '血虚（血・栄養不足）' },
-    { key: 'blood_stag', label: '瘀血', max: 2, name: '瘀血（血行不良）' },
-    { key: 'water', label: '水滞', max: 2, name: '水滞（水分代謝不良）' },
+    { key: 'qi_stag', label: '気滞', max: 2, name: '気滞（ストレス・気の巡りストップ）' },
+    { key: 'blood_def', label: '血虚', max: 2, name: '血虚（うるおい・栄養不足）' },
+    { key: 'blood_stag', label: '瘀血', max: 2, name: '瘀血（血行不良・コリ冷え）' },
+    { key: 'water', label: '水滞', max: 2, name: '水滞（水分停滞・むくみ）' },
     { key: 'yang_def', label: '陽虚', max: 1, name: '陽虚（深部の冷え）' },
-    { key: 'yin_def', label: '陰虚', max: 1, name: '陰虚（潤い不足・ほてり）' }
+    { key: 'yin_def', label: '陰虚', max: 1, name: '陰虚（ほてり・熱こもり）' }
 ];
 
 const careMap = {
-    qi_def: '胃腸を冷やさず、消化の良い食事と十分な睡眠を最優先に。',
-    qi_stag: '柑橘類やハーブティ（紫蘇・ミント）など香りの良いもので発散。',
-    blood_def: '黒ごま、ナツメ、赤身肉を摂取し、夜更かしを避けて早めの就寝を。',
-    blood_stag: '湯船で芯まで体を温め、適度なウォーキングで血流を促しましょう。',
-    water: '冷たい飲食を控え、温かい白湯をこまめに。半身浴で適度に発汗を。',
-    yang_def: '首・手首・足首・お腹を冷やさず、生姜や根菜類で温活を。',
-    yin_def: '辛いものを控え、白きくらげ、山芋、梨など潤いを補う食材を。'
+    qi_def: '胃腸を冷やさず、消化の良い食事と十分な睡眠でエネルギーをチャージしましょう。',
+    qi_stag: '柑橘類の香りやハーブティで気分を発散させ、深く深呼吸する時間を作りましょう。',
+    blood_def: '黒ごま、ナツメ、赤身肉などを摂り、夜更かしを避けて早めの就寝を心がけましょう。',
+    blood_stag: '湯船にゆっくり浸かって体を芯から温め、軽い運動で血流を促しましょう。',
+    water: '冷たい飲食を控え、温かいお白湯をこまめに摂って水はけを整えましょう。',
+    yang_def: '3つの首（首・手首・足首）を冷やさないようにし、生姜や根菜類で温活をしましょう。',
+    yin_def: '辛いものを控え、白きくらげや山芋など潤いを補う食材を摂りましょう。'
 };
 
+// ページ読み込み時に処方セレクトボックスを必ず構築
 window.addEventListener('DOMContentLoaded', () => {
     initFormulaDropdowns();
 });
@@ -688,7 +694,9 @@ function initFormulaDropdowns() {
     const mainSel = document.getElementById('mainFormulaSelect');
     const subSel = document.getElementById('subFormulaSelect');
     
-    mainSel.innerHTML = '';
+    if (!mainSel || !subSel) return;
+
+    mainSel.innerHTML = '<option value="">-- 処方を選択してください --</option>';
     subSel.innerHTML = '<option value="">なし（単剤）</option>';
 
     if (typeof KAMPO_DATABASE !== 'undefined' && Array.isArray(KAMPO_DATABASE)) {
@@ -699,7 +707,6 @@ function initFormulaDropdowns() {
     }
 }
 
-// 次回予約日のクイック設定（+7日、+14日、+28日）
 function setNextDate(daysLater) {
     const baseDateStr = document.getElementById('recordDate').value;
     const baseDate = baseDateStr ? new Date(baseDateStr) : new Date();
@@ -713,11 +720,11 @@ function setNextDate(daysLater) {
 
 function getSeasonalAdvice(dateObj) {
     const month = dateObj.getMonth() + 1;
-    if (month >= 3 && month <= 5) return "🌸 【春の養生（五行：肝）】 気の巡りが滞りやすい季節です。酸味のある食材や柑橘類、軽い運動で気の巡りを促しましょう。";
-    if (month === 6 || month === 7) return "☔ 【梅雨・湿邪の養生（五行：脾）】 余分な水分が溜まり胃腸が弱りやすい時期です。冷たいものの摂りすぎを控え、温かい白湯で水はけを整えましょう。";
-    if (month === 8) return "☀️ 【夏の養生（五行：心）】 暑さによる消耗と発汗による体液不足に注意。ウリ類や麦茶で熱を冷まし、無理な過労は避けましょう。";
-    if (month >= 9 && month <= 11) return "🍁 【秋の養生（五行：肺）】 空気が乾燥し、潤いが不足しやすい季節です。白い食材（レンコン、白ごま、梨）で肺と皮膚を潤しましょう。";
-    return "❄️ 【冬の養生（五行：腎）】 寒さで生命エネルギー（腎気）が衰えやすい時期です。黒い食材や根菜類を摂り、下半身を徹底的に温めましょう。";
+    if (month >= 3 && month <= 5) return "🌸 【春の養生（五行：肝）】 気の巡りが滞りやすい季節です。香りの良い食材や深呼吸でリラックスを。";
+    if (month === 6 || month === 7) return "☔ 【梅雨・湿邪の養生（五行：脾）】 余分な水分が溜まり胃腸が弱りやすい時期です。温かい白湯で水はけを整えましょう。";
+    if (month === 8) return "☀️ 【夏の養生（五行：心）】 暑さによる消耗と発汗に注意。ウリ類や麦茶で熱を冷まし、無理な過労は避けましょう。";
+    if (month >= 9 && month <= 11) return "🍁 【秋の養生（五行：肺）】 空気が乾燥し、喉や肌の潤いが不足しやすい季節です。白い食材で肺と皮膚を潤しましょう。";
+    return "❄️ 【冬の養生（五行：腎）】 寒さで生命エネルギーが衰えやすい時期です。黒い食材や根菜類を摂り、下半身を温めましょう。";
 }
 
 function checkSafetyAndCalc() {
@@ -1203,7 +1210,7 @@ function resetForm() {
     document.getElementById('memoInput').value = '';
     document.getElementById('nextVisitDate').value = '';
     activeVisitIndex = null;
-    currentPatientRecord = { version: "3.6", clientInfo: {}, visits: [] };
+    currentPatientRecord = { version: "4.3", clientInfo: {}, visits: [] };
     document.getElementById('historyTimelineBox').style.display = 'none';
     initFormulaDropdowns();
     window.scrollTo({ top: 0, behavior: 'smooth' });
