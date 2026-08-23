@@ -84,7 +84,7 @@
             display: none;
         }
         .history-timeline-box h3 { font-size: 13px; color: var(--accent); margin-bottom: 8px; }
-        .history-list { display: flex; gap: 8px; flex-wrap: wrap; }
+        .history-list { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
         .history-badge {
             background: #fdf5ec;
             border: 1px solid #b86b28;
@@ -99,6 +99,16 @@
         .history-badge:hover, .history-badge.active {
             background: #b86b28;
             color: #ffffff;
+        }
+        .btn-new-visit {
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 11.5px;
+            cursor: pointer;
+            font-weight: bold;
         }
 
         /* カルテ情報 */
@@ -318,9 +328,9 @@
         </div>
     </div>
 
-    <!-- 通院履歴タイムライン（ファイル読込時に自動表示） -->
+    <!-- 通院履歴タイムライン -->
     <div id="historyTimelineBox" class="history-timeline-box no-print">
-        <h3>📅 通院履歴タイムライン（クリックして過去の受診データに切り替え）</h3>
+        <h3>📅 通院履歴タイムライン（クリックで過去データの閲覧・編集）</h3>
         <div class="history-list" id="historyBadgeList"></div>
     </div>
 
@@ -470,21 +480,13 @@
 <script>
 document.getElementById('recordDate').valueAsDate = new Date();
 
-// マルチ世代カルテデータ構造
 let currentPatientRecord = {
-    version: "3.0",
-    clientInfo: {
-        clientNo: "",
-        clientName: "",
-        clientAge: "",
-        clientGender: "女性",
-        clientSho: "all",
-        staffName: ""
-    },
-    visits: [] // 過去すべての受診履歴（タイムライン配列）
+    version: "3.1",
+    clientInfo: { clientNo: "", clientName: "", clientAge: "", clientGender: "女性", clientSho: "all", staffName: "" },
+    visits: []
 };
 
-let activeVisitIndex = null; // 現在表示・編集中の受診インデックス
+let activeVisitIndex = null;
 
 const categories = [
     { key: 'qi_def', label: '気虚', max: 2, name: '気虚（エネルギー不足）' },
@@ -558,7 +560,6 @@ function checkSafetyAndCalc() {
     document.getElementById('dispenseResultBox').style.display = 'block';
 }
 
-// フォームの入力内容から「1回分の受診データオブジェクト」を作成
 function getCurrentVisitData() {
     const checkedIds = [];
     document.querySelectorAll('#kampoForm input[type="checkbox"]').forEach(cb => {
@@ -579,7 +580,7 @@ function getCurrentVisitData() {
     };
 }
 
-// 本日の受診データを追加（または編集）して分析実行
+// 新規受診データを必ず末尾に追加する関数
 function addNewVisitAndAnalyze() {
     const name = document.getElementById('clientName').value.trim();
     if (!name) {
@@ -588,7 +589,6 @@ function addNewVisitAndAnalyze() {
         return;
     }
 
-    // 患者基本情報の更新
     currentPatientRecord.clientInfo = {
         clientNo: document.getElementById('clientNo').value.trim(),
         clientName: name,
@@ -600,20 +600,14 @@ function addNewVisitAndAnalyze() {
 
     const newVisit = getCurrentVisitData();
 
-    if (activeVisitIndex !== null) {
-        // 既存の履歴を上書き編集
-        currentPatientRecord.visits[activeVisitIndex] = newVisit;
-    } else {
-        // 新規受診として末尾に追加
-        currentPatientRecord.visits.push(newVisit);
-        activeVisitIndex = currentPatientRecord.visits.length - 1;
-    }
+    // 常に新しい世代（末尾）として追加する
+    currentPatientRecord.visits.push(newVisit);
+    activeVisitIndex = currentPatientRecord.visits.length - 1;
 
     renderHistoryTimeline();
     analyzeAndGenerateReport();
 }
 
-// タイムラインバッジの描画
 function renderHistoryTimeline() {
     const box = document.getElementById('historyTimelineBox');
     const list = document.getElementById('historyBadgeList');
@@ -632,17 +626,31 @@ function renderHistoryTimeline() {
         list.appendChild(badge);
     });
 
+    // 「新規受診（本日分）を追加」ボタンをタイムライン横に常設
+    const addBtn = document.createElement('button');
+    addBtn.type = 'button';
+    addBtn.className = 'btn-new-visit';
+    addBtn.textContent = '＋ 新規受診を入力する';
+    addBtn.onclick = () => {
+        activeVisitIndex = null;
+        document.getElementById('recordDate').valueAsDate = new Date();
+        document.getElementById('kampoForm').reset();
+        document.getElementById('memoInput').value = '';
+        document.getElementById('result-wrapper').style.display = 'none';
+        renderHistoryTimeline();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    list.appendChild(addBtn);
+
     box.style.display = 'block';
 }
 
-// 選択した過去の受診データをフォームに読み込む
 function loadVisitByIndex(index) {
     const visit = currentPatientRecord.visits[index];
     if (!visit) return;
 
     activeVisitIndex = index;
 
-    // 基本情報セット
     document.getElementById('clientNo').value = currentPatientRecord.clientInfo.clientNo || '';
     document.getElementById('clientName').value = currentPatientRecord.clientInfo.clientName || '';
     document.getElementById('clientAge').value = currentPatientRecord.clientInfo.clientAge || '';
@@ -651,7 +659,6 @@ function loadVisitByIndex(index) {
     document.getElementById('staffName').value = visit.staffName || '';
     document.getElementById('recordDate').value = visit.recordDate || '';
 
-    // チェックボックス全リセット＆復元
     document.querySelectorAll('#kampoForm input[type="checkbox"]').forEach(cb => cb.checked = false);
     if (Array.isArray(visit.checkedIds)) {
         visit.checkedIds.forEach(id => {
@@ -660,7 +667,6 @@ function loadVisitByIndex(index) {
         });
     }
 
-    // 処方・メモセット
     if (visit.prescription) {
         document.getElementById('mainFormulaSelect').value = visit.prescription.mainCode || '41';
         document.getElementById('subFormulaSelect').value = visit.prescription.subCode || '';
@@ -674,7 +680,6 @@ function loadVisitByIndex(index) {
 
 function analyzeAndGenerateReport() {
     if (activeVisitIndex === null && currentPatientRecord.visits.length === 0) {
-        // まだデータがない場合は仮の現在値で分析
         const tempVisit = getCurrentVisitData();
         currentPatientRecord.visits.push(tempVisit);
         activeVisitIndex = 0;
@@ -691,14 +696,12 @@ function analyzeAndGenerateReport() {
 
     document.getElementById('seasonAdvBox').textContent = getSeasonalAdvice(new Date(currentVisit.recordDate));
 
-    // 四診所見
     const selectedShishin = [];
     document.querySelectorAll('#kampoForm input[data-shishin]:checked').forEach(cb => {
         selectedShishin.push(cb.getAttribute('data-shishin'));
     });
     document.getElementById('shishinSummaryBox').innerHTML = selectedShishin.length > 0 ? `<strong>【四診所見】</strong>: ${selectedShishin.join('、')}` : '';
 
-    // スコア計算
     const scores = {};
     const ratios = [];
     let summaryHtml = '<table style="width:100%; border-collapse:collapse;">';
@@ -721,7 +724,6 @@ function analyzeAndGenerateReport() {
     summaryHtml += '</table>';
     document.getElementById('scoreSummaryList').innerHTML = summaryHtml;
 
-    // 比較用データ（直前の受診データがあれば取得）
     let prevRatios = null;
     if (activeVisitIndex > 0) {
         const prevVisit = currentPatientRecord.visits[activeVisitIndex - 1];
@@ -803,7 +805,6 @@ function drawRadarChart(currentData, prevData = null) {
         ctx.fillText(categories[i].label, labelX, labelY);
     }
 
-    // 直前受診データ比較（赤点線）
     if (prevData && Array.isArray(prevData)) {
         ctx.beginPath();
         for (let i = 0; i < count; i++) {
@@ -825,7 +826,6 @@ function drawRadarChart(currentData, prevData = null) {
         document.getElementById('compareLegend').style.display = 'none';
     }
 
-    // 今回データ（緑）
     ctx.beginPath();
     for (let i = 0; i < count; i++) {
         const val = Math.max(currentData[i], 0.08);
@@ -843,12 +843,10 @@ function drawRadarChart(currentData, prevData = null) {
     ctx.stroke();
 }
 
-// カルテ全体のJSONエクスポート
 function exportPatientData() {
     const name = document.getElementById('clientName').value.trim() || '未設定';
     const age = document.getElementById('clientAge').value.trim() || '不明';
 
-    // 現在入力中の内容も一時保存に反映
     if (activeVisitIndex !== null && currentPatientRecord.visits[activeVisitIndex]) {
         currentPatientRecord.visits[activeVisitIndex] = getCurrentVisitData();
     }
@@ -872,7 +870,6 @@ function exportPatientData() {
     downloadAnchor.remove();
 }
 
-// カルテ全体のJSONインポート
 function importPatientData(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -883,7 +880,6 @@ function importPatientData(event) {
             const data = JSON.parse(e.target.result);
             if (data && Array.isArray(data.visits)) {
                 currentPatientRecord = data;
-                // 最新（最後）の受診データを初期表示
                 loadVisitByIndex(currentPatientRecord.visits.length - 1);
                 alert(`マルチ世代カルテ「${file.name}」を正常に読み込みました！（全${currentPatientRecord.visits.length}回分の履歴）🌿`);
             } else {
@@ -933,7 +929,7 @@ function resetForm() {
     document.getElementById('safetyAlertBox').style.display = 'none';
     document.getElementById('memoInput').value = '';
     activeVisitIndex = null;
-    currentPatientRecord = { version: "3.0", clientInfo: {}, visits: [] };
+    currentPatientRecord = { version: "3.1", clientInfo: {}, visits: [] };
     document.getElementById('historyTimelineBox').style.display = 'none';
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
