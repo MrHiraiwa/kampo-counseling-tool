@@ -1,6 +1,8 @@
 # 🌿 漢方体質分析＆処方安全管理システム
 **Kampo Constitutional Analysis & Integrated Guidance System**
 
+[![GitHub Pages Deployment](https://img.shields.io/badge/Demo-Web%20App%20%E3%82%92%E9%96%8b%E3%81%8F-2d5a43?style=for-the-badge&logo=html5)](https://mrhiraiwa.github.io/kampo-counseling-tool/)
+
 漢方薬局でのカウンセリング業務、体質分析、処方選定、安全管理（生薬重複チェック）、および患者カルテ管理を、**サーバーやDB不要（HTML / 外部JavaScriptファイルのみ）**でブラウザ上で完結させる軽量な支援ツールです。
 
 ---
