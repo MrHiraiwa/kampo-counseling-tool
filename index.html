@@ -85,26 +85,52 @@
         }
         .history-timeline-box h3 { font-size: 13px; color: var(--accent); margin-bottom: 8px; }
         .history-list { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-        .history-badge {
+        
+        .history-badge-wrapper {
+            display: inline-flex;
+            align-items: center;
             background: #fdf5ec;
             border: 1px solid #b86b28;
-            color: #b86b28;
-            padding: 4px 10px;
             border-radius: 16px;
+            overflow: hidden;
             font-size: 11.5px;
-            cursor: pointer;
             font-weight: bold;
+        }
+        .history-badge {
+            padding: 4px 8px 4px 10px;
+            color: #b86b28;
+            cursor: pointer;
             transition: all 0.2s;
         }
-        .history-badge:hover, .history-badge.active {
+        .history-badge-wrapper:hover, .history-badge-wrapper.active {
             background: #b86b28;
             color: #ffffff;
         }
+        .history-badge-wrapper.active .history-badge {
+            color: #ffffff;
+        }
+        .history-delete-btn {
+            background: transparent;
+            border: none;
+            color: #b86b28;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 11px;
+        }
+        .history-badge-wrapper:hover .history-delete-btn,
+        .history-badge-wrapper.active .history-delete-btn {
+            color: #ffffff;
+        }
+        .history-delete-btn:hover {
+            background: rgba(0,0,0,0.15);
+        }
+
         .btn-new-visit {
             background: var(--primary);
             color: #fff;
             border: none;
-            padding: 4px 10px;
+            padding: 5px 12px;
             border-radius: 16px;
             font-size: 11.5px;
             cursor: pointer;
@@ -330,7 +356,7 @@
 
     <!-- 通院履歴タイムライン -->
     <div id="historyTimelineBox" class="history-timeline-box no-print">
-        <h3>📅 通院履歴タイムライン（クリックで過去データの閲覧・編集）</h3>
+        <h3>📅 通院履歴タイムライン（クリックで閲覧・編集、[×]で削除）</h3>
         <div class="history-list" id="historyBadgeList"></div>
     </div>
 
@@ -481,7 +507,7 @@
 document.getElementById('recordDate').valueAsDate = new Date();
 
 let currentPatientRecord = {
-    version: "3.1",
+    version: "3.2",
     clientInfo: { clientNo: "", clientName: "", clientAge: "", clientGender: "女性", clientSho: "all", staffName: "" },
     visits: []
 };
@@ -580,7 +606,7 @@ function getCurrentVisitData() {
     };
 }
 
-// 新規受診データを必ず末尾に追加する関数
+// 新規受診データを必ず新しい世代（末尾）として追加する関数
 function addNewVisitAndAnalyze() {
     const name = document.getElementById('clientName').value.trim();
     if (!name) {
@@ -600,9 +626,14 @@ function addNewVisitAndAnalyze() {
 
     const newVisit = getCurrentVisitData();
 
-    // 常に新しい世代（末尾）として追加する
-    currentPatientRecord.visits.push(newVisit);
-    activeVisitIndex = currentPatientRecord.visits.length - 1;
+    if (activeVisitIndex !== null) {
+        // 過去の回を閲覧・編集していた場合は、その回を上書き保存
+        currentPatientRecord.visits[activeVisitIndex] = newVisit;
+    } else {
+        // 新規作成時や「新規受診を入力する」を押した直後は末尾に新しい世代として追加
+        currentPatientRecord.visits.push(newVisit);
+        activeVisitIndex = currentPatientRecord.visits.length - 1;
+    }
 
     renderHistoryTimeline();
     analyzeAndGenerateReport();
@@ -619,21 +650,37 @@ function renderHistoryTimeline() {
     }
 
     currentPatientRecord.visits.forEach((v, index) => {
-        const badge = document.createElement('div');
-        badge.className = `history-badge ${index === activeVisitIndex ? 'active' : ''}`;
+        const wrapper = document.createElement('div');
+        wrapper.className = `history-badge-wrapper ${index === activeVisitIndex ? 'active' : ''}`;
+
+        const badge = document.createElement('span');
+        badge.className = 'history-badge';
         badge.textContent = `第${index + 1}回 (${v.recordDate})`;
         badge.onclick = () => loadVisitByIndex(index);
-        list.appendChild(badge);
+
+        const delBtn = document.createElement('button');
+        delBtn.type = 'button';
+        delBtn.className = 'history-delete-btn';
+        delBtn.textContent = '×';
+        delBtn.title = 'この回を削除';
+        delBtn.onclick = (e) => {
+            e.stopPropagation();
+            deleteVisitByIndex(index);
+        };
+
+        wrapper.appendChild(badge);
+        wrapper.appendChild(delBtn);
+        list.appendChild(wrapper);
     });
 
-    // 「新規受診（本日分）を追加」ボタンをタイムライン横に常設
+    // 「新規受診（本日分）を入力する」ボタン（押すと本日の日付と空フォームにリセット）
     const addBtn = document.createElement('button');
     addBtn.type = 'button';
     addBtn.className = 'btn-new-visit';
     addBtn.textContent = '＋ 新規受診を入力する';
     addBtn.onclick = () => {
         activeVisitIndex = null;
-        document.getElementById('recordDate').valueAsDate = new Date();
+        document.getElementById('recordDate').valueAsDate = new Date(); // 本日の日付に自動セット
         document.getElementById('kampoForm').reset();
         document.getElementById('memoInput').value = '';
         document.getElementById('result-wrapper').style.display = 'none';
@@ -643,6 +690,20 @@ function renderHistoryTimeline() {
     list.appendChild(addBtn);
 
     box.style.display = 'block';
+}
+
+// 指定した受診履歴を削除
+function deleteVisitByIndex(index) {
+    if (!confirm(`第${index + 1}回 (${currentPatientRecord.visits[index].recordDate}) の受診データを削除しますか？`)) return;
+
+    currentPatientRecord.visits.splice(index, 1);
+
+    if (currentPatientRecord.visits.length === 0) {
+        resetForm();
+    } else {
+        // 削除後は直前の回を選択状態にする
+        loadVisitByIndex(Math.max(0, index - 1));
+    }
 }
 
 function loadVisitByIndex(index) {
@@ -929,7 +990,7 @@ function resetForm() {
     document.getElementById('safetyAlertBox').style.display = 'none';
     document.getElementById('memoInput').value = '';
     activeVisitIndex = null;
-    currentPatientRecord = { version: "3.1", clientInfo: {}, visits: [] };
+    currentPatientRecord = { version: "3.2", clientInfo: {}, visits: [] };
     document.getElementById('historyTimelineBox').style.display = 'none';
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
