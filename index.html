@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>漢方薬局向け 総合体質分析・安全管理・カルテ支援システム</title>
+    <!-- jsPDF & html2canvas for PDF output -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        :root {
+            --primary: #2d5a43;
+            --primary-light: #f0f6f2;
+            --accent: #b86b28;
+            --accent-light: #fdf5ec;
+            --danger: #c0392b;
+            --danger-light: #fdf2f2;
+            --bg: #f5f2ea;
+            --card-bg: #ffffff;
+            --text: #2c3e35;
+            --border: #d5cec2;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Helvetica Neue', Arial, 'Hiragino Kaku Gothic ProN', 'BIZ UDPGothic', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 20px 14px;
+        }
+        .container {
+            max-width: 1040px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+        }
+        header {
+            text-align: center;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 14px;
+            margin-bottom: 18px;
+        }
+        h1 { font-size: 22px; color: var(--primary); letter-spacing: 0.05em; }
+        .desc { font-size: 13px; color: #666; margin-top: 4px; }
+
+        /* データ管理バー */
+        .data-io-bar {
+            background: #eef2ed;
+            border: 1px dashed var(--primary);
+            padding: 10px 16px;
+            border-radius: 8px;
+            margin-bottom: 18px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .data-io-label { font-size: 12.5px; font-weight: bold; color: var(--primary); }
+        .data-io-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn-io {
+            background-color: #ffffff;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 6px 12px;
+            font-size: 12px;
+            font-weight: bold;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-io:hover { background-color: var(--primary); color: #ffffff; }
+
+        /* カルテ情報 */
+        .client-info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 12px;
+            margin-bottom: 18px;
+            padding: 14px;
+            background: var(--primary-light);
+            border-radius: 8px;
+        }
+        .form-group label { display: block; font-size: 11px; font-weight: bold; color: var(--primary); margin-bottom: 3px; }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 7px 10px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 13px;
+            background: #fff;
+        }
+
+        /* セクション枠 */
+        .section-box {
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            background: #fff;
+        }
+        .section-title {
+            background: #f1ede4;
+            padding: 9px 14px;
+            font-weight: bold;
+            font-size: 13.5px;
+            color: var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+            gap: 8px;
+            padding: 12px 14px;
+        }
+        .checkbox-item { display: flex; align-items: flex-start; font-size: 12px; cursor: pointer; }
+        .checkbox-item input { margin-top: 2px; margin-right: 6px; cursor: pointer; }
+
+        /* 四診パレット（舌・腹） */
+        .shishin-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            padding: 14px;
+        }
+        @media (max-width: 768px) { .shishin-grid { grid-template-columns: 1fr; } }
+        .shishin-group h4 { font-size: 12.5px; color: var(--accent); margin-bottom: 6px; border-bottom: 1px dashed #ebdccb; padding-bottom: 3px; }
+
+        /* アラート・計算ツール */
+        .alert-box {
+            background: var(--danger-light);
+            border: 1px solid #f5c6cb;
+            color: var(--danger);
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            margin-bottom: 16px;
+            display: none;
+        }
+        .alert-box strong { font-size: 13px; }
+
+        .calc-panel {
+            padding: 14px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            background: #fdfaf4;
+        }
+
+        /* アクションバー */
+        .action-bar { display: flex; justify-content: center; gap: 12px; margin: 24px 0 16px; }
+        .btn {
+            background-color: var(--primary);
+            color: #fff;
+            border: none;
+            padding: 10px 24px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn:hover { opacity: 0.9; }
+        .btn-secondary { background-color: #6c757d; }
+        .btn-pdf { background-color: #c0392b; }
+        .btn-print { background-color: var(--accent); }
+
+        /* 結果レポート */
+        #result-wrapper { display: none; margin-top: 24px; border-top: 2px dashed var(--border); padding-top: 20px; }
+        .report-paper { background: #fff; border: 1px solid #ddd; padding: 24px; border-radius: 8px; }
+        .report-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 10px;
+            margin-bottom: 14px;
+        }
+        .report-title h2 { font-size: 18px; color: var(--primary); }
+        .report-title p { font-size: 11px; color: #666; }
+        .report-client-summary { font-size: 11.5px; text-align: right; color: #444; }
+
+        .report-grid {
+            display: grid;
+            grid-template-columns: 260px 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+        .chart-box { text-align: center; background: var(--primary-light); border: 1px solid #d0e0d6; padding: 12px; border-radius: 8px; }
+
+        .diagnosis-card {
+            background: var(--accent-light);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--accent);
+        }
+        .diagnosis-card h4 { font-size: 13.5px; color: #8f4d15; margin-bottom: 4px; display: flex; justify-content: space-between; }
+        .diagnosis-card p { font-size: 12px; margin-bottom: 3px; line-height: 1.45; }
+
+        .matched-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            margin-top: 6px;
+            background: #fff;
+            border: 1px solid #e0ded8;
+        }
+        .matched-table th, .matched-table td { padding: 4px 6px; border-bottom: 1px solid #eee; text-align: left; }
+        .matched-table th { background: #f7f5f0; color: #555; }
+        .badge { display: inline-block; padding: 2px 5px; border-radius: 3px; font-size: 9.5px; font-weight: bold; }
+        .badge-kyo { background: #e3f2fd; color: #1976d2; }
+        .badge-chu { background: #e8f5e9; color: #388e3c; }
+        .badge-jitsu { background: #fbe9e7; color: #d84315; }
+
+        .season-box {
+            background: #eaf4ed;
+            border-left: 4px solid var(--primary);
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 11.5px;
+            margin-bottom: 12px;
+        }
+        .pharmacy-memo {
+            margin-top: 12px;
+            border: 1px dashed var(--primary);
+            background: #fff;
+            padding: 10px 12px;
+            border-radius: 6px;
+            font-size: 11.5px;
+        }
+        .pharmacy-memo textarea {
+            width: 100%;
+            height: 45px;
+            border: 1px solid #e0ded8;
+            border-radius: 4px;
+            padding: 4px;
+            font-size: 11.5px;
+            resize: vertical;
+            margin-top: 4px;
+        }
+
+        .report-footer {
+            margin-top: 18px;
+            padding-top: 8px;
+            border-top: 1px solid #eee;
+            font-size: 10px;
+            color: #888;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        @media print {
+            body { background: #fff; padding: 0; }
+            .container { box-shadow: none; padding: 0; max-width: 100%; }
+            header, .data-io-bar, .client-info-grid, #kampoForm, .section-box, .action-bar, .no-print { display: none !important; }
+            #result-wrapper { display: block !important; border: none; padding: 0; margin: 0; }
+            .report-paper { box-shadow: none; border: none; padding: 6mm 5mm; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>🌿 漢方体質分析＆処方安全管理システム</h1>
+        <p class="desc">気血水・四診（舌・腹）・生薬重複チェック・過去カルテ比較・煎じ薬調剤計算を一括サポート</p>
+    </header>
+
+    <!-- カルテデータ入出力 & 過去比較 -->
+    <div class="data-io-bar no-print">
+        <div class="data-io-label">📁 カルテ管理 & 経過比較</div>
+        <div class="data-io-actions">
+            <button type="button" class="btn-io" onclick="exportPatientData()">💾 カルテ保存 (Export)</button>
+            <button type="button" class="btn-io" onclick="document.getElementById('importFileInput').click()">📂 カルテ読込 (Import)</button>
+            <button type="button" class="btn-io" style="border-color:#b86b28; color:#b86b28;" onclick="document.getElementById('compareFileInput').click()">📊 過去カルテと比較 (Before/After)</button>
+            <input type="file" id="importFileInput" accept=".json" style="display: none;" onchange="importPatientData(event)">
+            <input type="file" id="compareFileInput" accept=".json" style="display: none;" onchange="importCompareData(event)">
+        </div>
+    </div>
+
+    <!-- 生薬重複・相互作用アラート -->
+    <div id="safetyAlertBox" class="alert-box">
+        <strong>⚠️ 生薬重複・安全性チェック警告:</strong>
+        <div id="safetyAlertContent"></div>
+    </div>
+
+    <!-- カルテ基本情報 -->
+    <div class="client-info-grid">
+        <div class="form-group"><label>カルテNo</label><input type="text" id="clientNo" placeholder="No. 1001"></div>
+        <div class="form-group"><label>患者名</label><input type="text" id="clientName" placeholder="山田 太郎"></div>
+        <div class="form-group"><label>年齢 (歳)</label><input type="number" id="clientAge" placeholder="45" min="0" max="130"></div>
+        <div class="form-group"><label>性別</label><select id="clientGender"><option value="女性">女性</option><option value="男性">男性</option><option value="その他">その他</option></select></div>
+        <div class="form-group"><label>相談日</label><input type="date" id="recordDate"></div>
+        <div class="form-group"><label>証（体力）</label><select id="clientSho"><option value="all">全般</option><option value="虚証">虚証</option><option value="中間証">中間証</option><option value="実証">実証</option></select></div>
+        <div class="form-group"><label>担当者</label><input type="text" id="staffName" placeholder="担当薬剤師"></div>
+    </div>
+
+    <!-- 診断チェック項目 -->
+    <form id="kampoForm">
+        <!-- 1. 気血水問診 -->
+        <div class="section-box">
+            <div class="section-title">1. 自覚症状チェック（気血水・寒熱）</div>
+            <div class="checkbox-grid">
+                <label class="checkbox-item"><input type="checkbox" id="q_qi_1" data-cat="qi_def"> 疲れやすく、だるさが抜けない（気虚）</label>
+                <label class="checkbox-item"><input type="checkbox" id="q_qi_2" data-cat="qi_def"> 食後に眠気・胃もたれがする（気虚）</label>
+                <label class="checkbox-item"><input type="checkbox" id="q_qistag_1" data-cat="qi_stag"> イライラ・情緒不安定（気滞）</label>
+                <label class="checkbox-item"><input type="checkbox" id="q_qistag_2" data-cat="qi_stag"> 喉のつかえ感・ため息（気滞）</label>
+                <label class="checkbox-item"><input type="checkbox" id="q_blood_1" data-cat="blood_def"> 肌・髪が乾燥する（血虚）</label>
+                <label class="checkbox-item"><input type="checkbox" id="q_blood_2" data-cat="blood_def"> 立ちくらみ・こむら返り（血虚）</label>
+                <label class="checkbox-item"><input type="checkbox" id="q_oketsu_1" data-cat="blood_stag"> 肩こり・クマ・シミ（瘀血）</label>
+                <label class="checkbox-item"><input type="checkbox" id="q_oketsu_2" data-cat="blood_stag"> 生理痛が重い・血塊（瘀血）</label>
+                <label class="checkbox-item"><input type="checkbox" id="q_water_1" data-cat="water"> 顔や手足がむくみやすい（水滞）</label>
+                <label class="checkbox-item"><input type="checkbox" id="q_water_2" data-cat="water"> 雨天・気圧で頭痛やめまい（水滞）</label>
+                <label class="checkbox-item"><input type="checkbox" id="q_yang_1" data-cat="yang_def"> 手足や腰が極端に冷える（陽虚）</label>
+                <label class="checkbox-item"><input type="checkbox" id="q_yin_1" data-cat="yin_def"> 手足の裏がほてる・寝汗（陰虚）</label>
+            </div>
+        </div>
+
+        <!-- 2. 四診パレット（舌診・腹診） -->
+        <div class="section-box">
+            <div class="section-title">2. 漢方四診パレット（舌診・腹診所見）</div>
+            <div class="shishin-grid">
+                <div class="shishin-group">
+                    <h4>👅 舌診（舌質・舌苔・形態）</h4>
+                    <div class="checkbox-grid" style="grid-template-columns: 1fr 1fr; padding: 4px 0;">
+                        <label class="checkbox-item"><input type="checkbox" id="t_pale" data-shishin="淡白舌(気血虚)"> 淡白（色白・気血虚）</label>
+                        <label class="checkbox-item"><input type="checkbox" id="t_red" data-shishin="紅舌・絳舌(熱/陰虚)"> 紅・深紅（熱・陰虚）</label>
+                        <label class="checkbox-item"><input type="checkbox" id="t_purple" data-shishin="紫暗・瘀斑(瘀血)"> 紫暗・シミ（瘀血）</label>
+                        <label class="checkbox-item"><input type="checkbox" id="t_white_moss" data-shishin="白苔(寒/湿)"> 白苔（寒・水分停滞）</label>
+                        <label class="checkbox-item"><input type="checkbox" id="t_yellow_moss" data-shishin="黄苔・厚苔(熱/湿熱)"> 黄厚苔（熱・湿熱）</label>
+                        <label class="checkbox-item"><input type="checkbox" id="t_teeth" data-shishin="歯痕舌(気虚/水滞)"> 歯痕・胖大（水・気虚）</label>
+                    </div>
+                </div>
+                <div class="shishin-group">
+                    <h4>🫄 腹診（腹力・腹証）</h4>
+                    <div class="checkbox-grid" style="grid-template-columns: 1fr 1fr; padding: 4px 0;">
+                        <label class="checkbox-item"><input type="checkbox" id="a_shinka" data-shishin="心下痞鞭(胃虚/気滞)"> 心下痞鞭（心窩部つかえ）</label>
+                        <label class="checkbox-item"><input type="checkbox" id="a_kyokyo" data-shishin="胸脇苦満(柴胡剤適応)"> 胸脇苦満（肋骨下圧痛）</label>
+                        <label class="checkbox-item"><input type="checkbox" id="a_seika_fujin" data-shishin="臍下不仁(腎虚/八味地黄丸)"> 臍下不仁（下腹部無力）</label>
+                        <label class="checkbox-item"><input type="checkbox" id="a_shofuku" data-shishin="小腹急結(瘀血/桃核承気湯)"> 小腹急結（左下腹圧痛）</label>
+                        <label class="checkbox-item"><input type="checkbox" id="a_shinsui" data-shishin="胃内停水(水滞/五苓散)"> 胃内停水（ポチャポチャ音）</label>
+                        <label class="checkbox-item"><input type="checkbox" id="a_fukuchoku" data-shishin="腹直筋拘急(芍薬甘草湯)"> 腹直筋拘急（筋肉の緊張）</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. 調剤・煎じ薬計算機 & 併用チェック -->
+        <div class="section-box no-print">
+            <div class="section-title">3. 処方選定・生薬重複チェック＆調剤日数計算</div>
+            <div class="calc-panel">
+                <div class="form-group">
+                    <label>主処方（第1選択）</label>
+                    <select id="mainFormulaSelect" onchange="checkSafetyAndCalc()"></select>
+                </div>
+                <div class="form-group">
+                    <label>併用処方（第2選択）</label>
+                    <select id="subFormulaSelect" onchange="checkSafetyAndCalc()"><option value="">なし（単剤）</option></select>
+                </div>
+                <div class="form-group">
+                    <label>調剤日数（日数）</label>
+                    <input type="number" id="dispenseDays" value="14" min="1" max="90" onchange="checkSafetyAndCalc()">
+                </div>
+            </div>
+        </div>
+
+        <div class="action-bar">
+            <button type="button" class="btn" onclick="analyzeAndGenerateReport()">体質分析＆レポート作成 📊</button>
+            <button type="button" class="btn btn-secondary" onclick="resetForm()">リセット 🔄</button>
+        </div>
+    </form>
+
+    <!-- レポート出力エリア -->
+    <div id="result-wrapper">
+        <div class="action-bar no-print" style="margin-top: 0; justify-content: flex-end; gap: 8px;">
+            <button type="button" class="btn btn-pdf" onclick="downloadPDF()">📄 PDF直接保存</button>
+            <button type="button" class="btn btn-print" onclick="window.print()">🖨️ A4印刷</button>
+        </div>
+
+        <div class="report-paper" id="reportContent">
+            <div class="report-header">
+                <div class="report-title">
+                    <h2>🌿 漢方体質分析＆カウンセリングレポート</h2>
+                    <p>Kampo Constitutional Analysis & Integrated Guidance Report</p>
+                </div>
+                <div class="report-client-summary">
+                    <p><strong>氏名:</strong> <span id="outName">未設定</span> 様 (<span id="outAttr">-</span>)</p>
+                    <p><strong>相談日:</strong> <span id="outDate">-</span> ｜ <strong>担当:</strong> <span id="outStaff">-</span></p>
+                </div>
+            </div>
+
+            <!-- 二十四節気・季節養生 -->
+            <div class="season-box" id="seasonAdvBox"></div>
+
+            <div class="report-grid">
+                <div class="chart-box">
+                    <canvas id="radarCanvas" width="240" height="240"></canvas>
+                    <p style="font-size: 10.5px; color: #555; margin-top: 6px;">【気血水・陰陽バランス】</p>
+                    <div id="compareLegend" style="font-size:10px; color:#b86b28; display:none; margin-top:2px;">■ 赤点線: 前回カルテ比較</div>
+                    <div id="scoreSummaryList" style="text-align: left; font-size: 11px; margin-top: 8px;"></div>
+                </div>
+
+                <div class="report-details">
+                    <div id="shishinSummaryBox" style="font-size:11.5px; margin-bottom:8px; color:#444;"></div>
+                    <div id="diagnosisList"></div>
+
+                    <!-- 煎じ薬・調剤指示欄 -->
+                    <div id="dispenseResultBox" style="display:none; background:#fff; border:1px solid #d5cec2; padding:8px 10px; border-radius:4px; font-size:11px; margin-top:8px;"></div>
+
+                    <div class="pharmacy-memo">
+                        <strong>📝 薬局・相談員からのメッセージ / 処方指示:</strong>
+                        <div id="memoDisplay" style="display:none; margin-top:4px; font-size:11.5px; white-space:pre-wrap;"></div>
+                        <textarea id="memoInput" class="no-print" placeholder="処方した漢方の飲み方（食前白湯など）や次回までの養生メモを記入..."></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <div class="report-footer">
+                <span>※ 本レポートは体質傾向の把握および生活養生を目的とした資料です。</span>
+                <span>漢方薬局 カウンセリング支援システム</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 外部処方マスター -->
+<script src="kampo_data.js"></script>
+
+<script>
+document.getElementById('recordDate').valueAsDate = new Date();
+
+let previousChartData = null; // 過去データ比較用
+
+const categories = [
+    { key: 'qi_def', label: '気虚', max: 2, name: '気虚（エネルギー不足）' },
+    { key: 'qi_stag', label: '気滞', max: 2, name: '気滞（ストレス・緊張）' },
+    { key: 'blood_def', label: '血虚', max: 2, name: '血虚（血・栄養不足）' },
+    { key: 'blood_stag', label: '瘀血', max: 2, name: '瘀血（血行不良）' },
+    { key: 'water', label: '水滞', max: 2, name: '水滞（水分代謝不良）' },
+    { key: 'yang_def', label: '陽虚', max: 1, name: '陽虚（深部の冷え）' },
+    { key: 'yin_def', label: '陰虚', max: 1, name: '陰虚（潤い不足・ほてり）' }
+];
+
+const careMap = {
+    qi_def: '胃腸を冷やさず、消化の良い食事と十分な睡眠を最優先に。',
+    qi_stag: '柑橘類やハーブティ（紫蘇・ミント）など香りの良いもので発散。',
+    blood_def: '黒ごま、ナツメ、赤身肉を摂取し、夜更かしを避けて早めの就寝を。',
+    blood_stag: '湯船で芯まで体を温め、適度なウォーキングで血流を促しましょう。',
+    water: '冷たい飲食を控え、温かい白湯をこまめに。半身浴で適度に発汗を。',
+    yang_def: '首・手首・足首・お腹を冷やさず、生姜や根菜類で温活を。',
+    yin_def: '辛いものを控え、白きくらげ、山芋、梨など潤いを補う食材を。'
+};
+
+// 処方セレクトボックスの初期化
+window.addEventListener('DOMContentLoaded', () => {
+    if (typeof KAMPO_DATABASE !== 'undefined') {
+        const mainSel = document.getElementById('mainFormulaSelect');
+        const subSel = document.getElementById('subFormulaSelect');
+        KAMPO_DATABASE.forEach(item => {
+            const opt1 = new Option(`${item.name} (${item.code})`, item.code);
+            const opt2 = new Option(`${item.name} (${item.code})`, item.code);
+            mainSel.add(opt1);
+            subSel.add(opt2);
+        });
+    }
+});
+
+// 二十四節気・季節判定
+function getSeasonalAdvice(dateObj) {
+    const month = dateObj.getMonth() + 1;
+    if (month >= 3 && month <= 5) {
+        return "🌸 【春の養生（五行：肝）】 気の巡りが滞りやすく自律神経が乱れやすい季節です。酸味のある食材や柑橘類、軽い運動で気の巡りを促しましょう。";
+    } else if (month === 6 || month === 7) {
+        return "☔ 【梅雨・湿邪の養生（五行：脾）】 余分な水分が溜まり胃腸が弱りやすい時期です。冷たいものの摂りすぎを控え、豆類や温かい白湯で水はけを整えましょう。";
+    } else if (month === 8) {
+        return "☀️ 【夏の養生（五行：心）】 暑さによる消耗と発汗による体液不足に注意。ウリ類や麦茶で熱を冷まし、無理な過労は避けましょう。";
+    } else if (month >= 9 && month <= 11) {
+        return "🍁 【秋の養生（五行：肺）】 空気が乾燥し、喉や肌の潤いが不足しやすい季節です。白い食材（レンコン、白ごま、梨）で肺と皮膚を潤しましょう。";
+    } else {
+        return "❄️ 【冬の養生（五行：腎）】 寒さで生命エネルギー（腎気）が衰えやすい時期です。黒い食材（黒豆、黒ごま）や根菜類を摂り、下半身を徹底的に温めましょう。";
+    }
+}
+
+// 生薬重複・安全性チェック
+function checkSafetyAndCalc() {
+    if (typeof KAMPO_DATABASE === 'undefined') return;
+    const mainCode = document.getElementById('mainFormulaSelect').value;
+    const subCode = document.getElementById('subFormulaSelect').value;
+    const days = parseInt(document.getElementById('dispenseDays').value) || 14;
+
+    const mainF = KAMPO_DATABASE.find(k => k.code === mainCode);
+    const subF = KAMPO_DATABASE.find(k => k.code === subCode);
+
+    const alertDiv = document.getElementById('safetyAlertBox');
+    const alertContent = document.getElementById('safetyAlertContent');
+    const alerts = [];
+
+    const selectedHerbs = (mainF ? mainF.herbs : '') + (subF ? ', ' + subF.herbs : '');
+
+    // 甘草チェック
+    if (mainF && subF && mainF.herbs.includes('甘草') && subF.herbs.includes('甘草')) {
+        alerts.push('・「甘草」が重複しています（偽アルドステロン症・むくみ・血圧上昇に留意）');
+    }
+    // 麻黄チェック
+    if (mainF && subF && mainF.herbs.includes('麻黄') && subF.herbs.includes('麻黄')) {
+        alerts.push('・「麻黄」が重複しています（動悸・不眠・血圧上昇に留意）');
+    }
+    // 大黄チェック
+    if (mainF && subF && mainF.herbs.includes('大黄') && subF.herbs.includes('大黄')) {
+        alerts.push('・「大黄」が重複しています（下痢・腹痛・子宮収縮作用に留意）');
+    }
+
+    if (alerts.length > 0) {
+        alertContent.innerHTML = alerts.join('<br>');
+        alertDiv.style.display = 'block';
+    } else {
+        alertDiv.style.display = 'none';
+    }
+
+    // 調剤分量メモ
+    let dispenseHtml = `<strong>💊 処方・調剤日数計算 (${days}日分):</strong><br>`;
+    if (mainF) dispenseHtml += `・主処方: ${mainF.name} (ツムラ${mainF.code}) × ${days}日分<br>`;
+    if (subF) dispenseHtml += `・併用処方: ${subF.name} (ツムラ${subF.code}) × ${days}日分<br>`;
+    dispenseHtml += `<span style="color:#666;">※ 煎じ薬の場合は水600mlで約半量まで30〜40分弱火で煎じ、1日2〜3回食前空腹時に服用。</span>`;
+    document.getElementById('dispenseResultBox').innerHTML = dispenseHtml;
+    document.getElementById('dispenseResultBox').style.display = 'block';
+}
+
+function analyzeAndGenerateReport() {
+    const name = document.getElementById('clientName').value.trim() || '未設定';
+    const age = document.getElementById('clientAge').value.trim();
+    const gender = document.getElementById('clientGender').value;
+    const dateStr = document.getElementById('recordDate').value || new Date().toISOString().split('T')[0];
+    const staff = document.getElementById('staffName').value.trim() || '-';
+
+    document.getElementById('outName').textContent = name;
+    document.getElementById('outDate').textContent = dateStr;
+    document.getElementById('outAttr').textContent = age ? `${age}歳・${gender}` : gender;
+    document.getElementById('outStaff').textContent = staff;
+
+    // 季節養生
+    const seasonText = getSeasonalAdvice(new Date(dateStr));
+    document.getElementById('seasonAdvBox').textContent = seasonText;
+
+    // 四診サマリー
+    const selectedShishin = [];
+    document.querySelectorAll('#kampoForm input[data-shishin]:checked').forEach(cb => {
+        selectedShishin.push(cb.getAttribute('data-shishin'));
+    });
+    if (selectedShishin.length > 0) {
+        document.getElementById('shishinSummaryBox').innerHTML = `<strong>【四診所見】</strong>: ${selectedShishin.join('、')}`;
+    } else {
+        document.getElementById('shishinSummaryBox').innerHTML = '';
+    }
+
+    // スコア計算
+    const scores = {};
+    const ratios = [];
+    let summaryHtml = '<table style="width:100%; border-collapse:collapse;">';
+
+    categories.forEach(cat => {
+        const checked = document.querySelectorAll(`input[data-cat="${cat.key}"]:checked`).length;
+        const ratio = checked / cat.max;
+        scores[cat.key] = { count: checked, ratio: ratio };
+        ratios.push(ratio);
+
+        const pct = Math.round(ratio * 100);
+        summaryHtml += `<tr><td style="padding:2px 0;">${cat.label}:</td><td style="font-weight:bold; color:#2d5a43;">${pct}% (${checked}/${cat.max})</td></tr>`;
+    });
+    summaryHtml += '</table>';
+    document.getElementById('scoreSummaryList').innerHTML = summaryHtml;
+
+    drawRadarChart(ratios, previousChartData);
+    checkSafetyAndCalc();
+
+    // 上位体質
+    const sortedCats = [...categories].sort((a, b) => scores[b.key].ratio - scores[a.key].ratio);
+    const primaryIssues = sortedCats.filter(c => scores[c.key].ratio >= 0.5);
+    const targets = primaryIssues.length > 0 ? primaryIssues : sortedCats.slice(0, 2);
+
+    let html = '';
+    targets.forEach(cat => {
+        const pct = Math.round(scores[cat.key].ratio * 100);
+        html += `
+            <div class="diagnosis-card">
+                <h4><span>【${cat.name}】</span> <span>一致度: ${pct}%</span></h4>
+                <p><strong>■ 日常の養生法:</strong> ${careMap[cat.key]}</p>
+            </div>
+        `;
+    });
+
+    document.getElementById('diagnosisList').innerHTML = html;
+    document.getElementById('result-wrapper').style.display = 'block';
+    document.getElementById('result-wrapper').scrollIntoView({ behavior: 'smooth' });
+}
+
+function drawRadarChart(currentData, prevData = null) {
+    const canvas = document.getElementById('radarCanvas');
+    const ctx = canvas.getContext('2d');
+    const width = canvas.width;
+    const height = canvas.height;
+    const center = width / 2;
+    const radius = 70;
+    const count = categories.length;
+    const angleStep = (Math.PI * 2) / count;
+
+    ctx.clearRect(0, 0, width, height);
+
+    // グリッド
+    ctx.strokeStyle = '#d5cec2';
+    for (let level = 1; level <= 3; level++) {
+        const r = (radius / 3) * level;
+        ctx.beginPath();
+        for (let i = 0; i < count; i++) {
+            const angle = i * angleStep - Math.PI / 2;
+            const x = center + r * Math.cos(angle);
+            const y = center + r * Math.sin(angle);
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.stroke();
+    }
+
+    // 軸とラベル
+    for (let i = 0; i < count; i++) {
+        const angle = i * angleStep - Math.PI / 2;
+        ctx.beginPath();
+        ctx.moveTo(center, center);
+        ctx.lineTo(center + radius * Math.cos(angle), center + radius * Math.sin(angle));
+        ctx.stroke();
+
+        const labelX = center + (radius + 18) * Math.cos(angle);
+        const labelY = center + (radius + 10) * Math.sin(angle);
+        ctx.fillStyle = '#2d5a43';
+        ctx.font = 'bold 10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(categories[i].label, labelX, labelY);
+    }
+
+    // 過去データ比較（赤点線）
+    if (prevData && Array.isArray(prevData)) {
+        ctx.beginPath();
+        for (let i = 0; i < count; i++) {
+            const val = Math.max(prevData[i], 0.08);
+            const r = radius * val;
+            const angle = i * angleStep - Math.PI / 2;
+            const x = center + r * Math.cos(angle);
+            const y = center + r * Math.sin(angle);
+            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.closePath();
+        ctx.strokeStyle = '#b86b28';
+        ctx.setLineDash([3, 3]);
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        ctx.setLineDash([]);
+        document.getElementById('compareLegend').style.display = 'block';
+    }
+
+    // 今回データ（緑塗りつぶし）
+    ctx.beginPath();
+    for (let i = 0; i < count; i++) {
+        const val = Math.max(currentData[i], 0.08);
+        const r = radius * val;
+        const angle = i * angleStep - Math.PI / 2;
+        const x = center + r * Math.cos(angle);
+        const y = center + r * Math.sin(angle);
+        if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(45, 90, 67, 0.4)';
+    ctx.fill();
+    ctx.strokeStyle = '#2d5a43';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+}
+
+// カルテエクスポート
+function exportPatientData() {
+    const clientName = document.getElementById('clientName').value.trim() || '未設定';
+    const clientAge = document.getElementById('clientAge').value.trim() || '不明';
+
+    const checkedIds = [];
+    document.querySelectorAll('#kampoForm input[type="checkbox"]').forEach(cb => {
+        if (cb.checked) checkedIds.push(cb.id);
+    });
+
+    const patientData = {
+        version: "2.0",
+        exportDate: new Date().toISOString(),
+        clientInfo: {
+            clientNo: document.getElementById('clientNo').value.trim(),
+            clientName: clientName,
+            clientAge: clientAge,
+            clientGender: document.getElementById('clientGender').value,
+            recordDate: document.getElementById('recordDate').value,
+            clientSho: document.getElementById('clientSho').value,
+            staffName: document.getElementById('staffName').value.trim()
+        },
+        prescription: {
+            mainCode: document.getElementById('mainFormulaSelect').value,
+            subCode: document.getElementById('subFormulaSelect').value,
+            days: document.getElementById('dispenseDays').value
+        },
+        checkedIds: checkedIds,
+        memo: document.getElementById('memoInput').value
+    };
+
+    const jsonString = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(patientData, null, 2));
+    const downloadAnchor = document.createElement('a');
+    const ageSuffix = clientAge !== '不明' ? `${clientAge}歳` : '年齢不明';
+    downloadAnchor.setAttribute("href", jsonString);
+    downloadAnchor.setAttribute("download", `${clientName}_${ageSuffix}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+}
+
+// カルテインポート
+function importPatientData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            resetForm();
+
+            if (data.clientInfo) {
+                document.getElementById('clientNo').value = data.clientInfo.clientNo || '';
+                document.getElementById('clientName').value = data.clientInfo.clientName || '';
+                document.getElementById('clientAge').value = data.clientInfo.clientAge !== '不明' ? data.clientInfo.clientAge : '';
+                document.getElementById('clientGender').value = data.clientInfo.clientGender || '女性';
+                document.getElementById('recordDate').value = data.clientInfo.recordDate || '';
+                document.getElementById('clientSho').value = data.clientInfo.clientSho || 'all';
+                document.getElementById('staffName').value = data.clientInfo.staffName || '';
+            }
+
+            if (data.prescription) {
+                document.getElementById('mainFormulaSelect').value = data.prescription.mainCode || '41';
+                document.getElementById('subFormulaSelect').value = data.prescription.subCode || '';
+                document.getElementById('dispenseDays').value = data.prescription.days || 14;
+            }
+
+            if (Array.isArray(data.checkedIds)) {
+                data.checkedIds.forEach(id => {
+                    const cb = document.getElementById(id);
+                    if (cb) cb.checked = true;
+                });
+            }
+
+            if (data.memo) document.getElementById('memoInput').value = data.memo;
+
+            analyzeAndGenerateReport();
+            alert(`カルテデータ「${file.name}」を正常に読み込みました！🌿`);
+        } catch (err) {
+            alert('ファイルの読み込みに失敗しました。');
+        }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+}
+
+// 過去カルテ比較（Before / After）
+function importCompareData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            const prevRatios = [];
+
+            categories.forEach(cat => {
+                let cnt = 0;
+                if (Array.isArray(data.checkedIds)) {
+                    data.checkedIds.forEach(id => {
+                        const cb = document.getElementById(id);
+                        if (cb && cb.getAttribute('data-cat') === cat.key) cnt++;
+                    });
+                }
+                prevRatios.push(cnt / cat.max);
+            });
+
+            previousChartData = prevRatios;
+            analyzeAndGenerateReport();
+            alert(`過去カルテ「${file.name}」との比較データをレーダーチャートに重ねて描画しました！📊`);
+        } catch (err) {
+            alert('比較データの読み込みに失敗しました。');
+        }
+    };
+    reader.readAsText(file);
+    event.target.value = '';
+}
+
+// PDF保存
+async function downloadPDF() {
+    const memoText = document.getElementById('memoInput').value;
+    const memoDisp = document.getElementById('memoDisplay');
+    memoDisp.textContent = memoText || '特になし';
+    memoDisp.style.display = 'block';
+    document.getElementById('memoInput').style.display = 'none';
+
+    const element = document.getElementById('reportContent');
+    const clientName = document.getElementById('outName').textContent || 'お客様';
+    const clientAge = document.getElementById('clientAge').value.trim();
+    const ageSuffix = clientAge ? `_${clientAge}歳` : '';
+
+    try {
+        const canvas = await html2canvas(element, { scale: 2, useCORS: true });
+        const imgData = canvas.toDataURL('image/png');
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a4');
+        const pdfWidth = pdf.internal.pageSize.getWidth();
+        const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+
+        pdf.addImage(imgData, 'PNG', 0, 8, pdfWidth, pdfHeight);
+        pdf.save(`漢方カウンセリングレポート_${clientName}${ageSuffix}.pdf`);
+    } catch (err) {
+        alert('PDF出力に失敗しました。印刷画面（Ctrl+P）からのPDF保存をお試しください。');
+    } finally {
+        memoDisp.style.display = 'none';
+        document.getElementById('memoInput').style.display = 'block';
+    }
+}
+
+function resetForm() {
+    document.getElementById('kampoForm').reset();
+    document.getElementById('result-wrapper').style.display = 'none';
+    document.getElementById('safetyAlertBox').style.display = 'none';
+    document.getElementById('memoInput').value = '';
+    previousChartData = null;
+    document.getElementById('compareLegend').style.display = 'none';
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+</script>
+
+</body>
+</html>
