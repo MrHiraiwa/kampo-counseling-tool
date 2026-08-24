@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>漢方薬局向け 総合体質分析・安全管理・マルチ世代カルテ支援システム</title>
-    <!-- jsPDF & html2canvas for PDF output -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
@@ -46,7 +45,6 @@
         h1 { font-size: 22px; color: var(--primary); letter-spacing: 0.05em; }
         .desc { font-size: 13px; color: #666; margin-top: 4px; }
 
-        /* データ管理バー */
         .data-io-bar {
             background: #eef2ed;
             border: 1px dashed var(--primary);
@@ -74,7 +72,6 @@
         }
         .btn-io:hover { background-color: var(--primary); color: #ffffff; }
 
-        /* 通院履歴タイムラインボックス */
         .history-timeline-box {
             background: #fffdf9;
             border: 1px solid #ebdccb;
@@ -131,7 +128,6 @@
             font-weight: bold;
         }
 
-        /* 過去履歴の簡易一覧テーブル */
         .history-summary-table {
             width: 100%;
             border-collapse: collapse;
@@ -147,7 +143,6 @@
         }
         .history-summary-table th { background: #fcf8f2; color: #8f4d15; font-weight: bold; }
 
-        /* カルテ情報 */
         .client-info-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
@@ -167,7 +162,6 @@
             background: #fff;
         }
 
-        /* 予約日クイックボタン */
         .quick-date-btns {
             display: flex;
             gap: 4px;
@@ -186,7 +180,6 @@
         }
         .btn-qdate:hover { background: #2d5a43; color: #fff; }
 
-        /* セクション枠 */
         .section-box {
             border: 1px solid var(--border);
             border-radius: 8px;
@@ -205,16 +198,27 @@
             align-items: center;
         }
 
+        .symptom-group-title {
+            grid-column: 1 / -1;
+            font-size: 11.5px;
+            font-weight: bold;
+            color: var(--accent);
+            background: #fcf8f2;
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-top: 4px;
+            border-left: 3px solid var(--accent);
+        }
+
         .checkbox-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-            gap: 8px;
+            grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+            gap: 6px 12px;
             padding: 12px 14px;
         }
         .checkbox-item { display: flex; align-items: flex-start; font-size: 12px; cursor: pointer; }
-        .checkbox-item input { margin-top: 2px; margin-right: 6px; cursor: pointer; }
+        .checkbox-item input { margin-top: 3px; margin-right: 6px; cursor: pointer; flex-shrink: 0; }
 
-        /* 四診パレット */
         .shishin-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -224,7 +228,48 @@
         @media (max-width: 768px) { .shishin-grid { grid-template-columns: 1fr; } }
         .shishin-group h4 { font-size: 12.5px; color: var(--accent); margin-bottom: 6px; border-bottom: 1px dashed #ebdccb; padding-bottom: 3px; }
 
-        /* アラート・計算ツール */
+        .realtime-suggest-box {
+            margin: 10px 14px 14px;
+            background: #fdfcf7;
+            border: 1px solid #e5dccb;
+            border-radius: 6px;
+            padding: 10px 12px;
+        }
+        .suggested-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            margin-top: 6px;
+            background: #fff;
+            border: 1px solid #e0ded8;
+        }
+        .suggested-table th, .suggested-table td { padding: 6px 6px; border-bottom: 1px solid #eee; text-align: left; }
+        .suggested-table th { background: #f7f5f0; color: #555; }
+        .btn-apply-main {
+            background: #2d5a43;
+            color: #fff;
+            border: none;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-right: 4px;
+            white-space: nowrap;
+        }
+        .btn-apply-sub {
+            background: #b86b28;
+            color: #fff;
+            border: none;
+            padding: 3px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        .btn-apply-main:hover, .btn-apply-sub:hover { opacity: 0.85; }
+
         .alert-box {
             background: var(--danger-light);
             border: 1px solid #f5c6cb;
@@ -243,7 +288,6 @@
             background: #fdfaf4;
         }
 
-        /* アクションバー */
         .action-bar { display: flex; justify-content: center; gap: 12px; margin: 24px 0 16px; flex-wrap: wrap; }
         .btn {
             background-color: var(--primary);
@@ -261,7 +305,6 @@
         .btn-pdf { background-color: #c0392b; }
         .btn-print { background-color: var(--accent); }
 
-        /* 結果レポート */
         #result-wrapper { display: none; margin-top: 24px; border-top: 2px dashed var(--border); padding-top: 20px; }
         .report-paper { background: #fff; border: 1px solid #ddd; padding: 24px; border-radius: 8px; }
         .report-header {
@@ -302,16 +345,6 @@
         .diagnosis-card h4 { font-size: 13.5px; color: #8f4d15; margin-bottom: 4px; display: flex; justify-content: space-between; flex-wrap: wrap; }
         .diagnosis-card p { font-size: 12px; margin-bottom: 3px; line-height: 1.45; }
 
-        .matched-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 11px;
-            margin-top: 6px;
-            background: #fff;
-            border: 1px solid #e0ded8;
-        }
-        .matched-table th, .matched-table td { padding: 4px 6px; border-bottom: 1px solid #eee; text-align: left; }
-        .matched-table th { background: #f7f5f0; color: #555; }
         .badge { display: inline-block; padding: 2px 5px; border-radius: 3px; font-size: 9.5px; font-weight: bold; }
         .badge-kyo { background: #e3f2fd; color: #1976d2; }
         .badge-chu { background: #e8f5e9; color: #388e3c; }
@@ -370,7 +403,7 @@
 <div class="container">
     <header>
         <h1>🌿 漢方体質分析＆マルチ世代カルテ管理システム</h1>
-        <p class="desc">通院履歴・次回予約管理・経過トラッキング・生薬重複チェックを1ファイルで完結</p>
+        <p class="desc">多症状問診・通院履歴・次回予約管理・リアルタイム処方サジェスト完備</p>
     </header>
 
     <!-- カルテデータ入出力 -->
@@ -411,27 +444,61 @@
                 <button type="button" class="btn-qdate" onclick="setNextDate(28)">+4週</button>
             </div>
         </div>
-        <div class="form-group"><label>証（体力）</label><select id="clientSho"><option value="all">全般</option><option value="虚証">虚証</option><option value="中間証">中間証</option><option value="実証">実証</option></select></div>
+        <div class="form-group"><label>証（体力）</label><select id="clientSho" onchange="updateRealtimeSuggestions()"><option value="all">全般（制限なし）</option><option value="虚証">虚証（体力虚弱）</option><option value="中間証">中間証（体力普通）</option><option value="実証">実証（体力充実）</option></select></div>
         <div class="form-group"><label>担当者</label><input type="text" id="staffName" placeholder="担当薬剤師"></div>
     </div>
 
-    <!-- 診断チェック項目 -->
+    <!-- 診断チェック項目（全28項目） -->
     <form id="kampoForm">
         <div class="section-box">
-            <div class="section-title">1. 自覚症状チェック（気血水・寒熱）</div>
+            <div class="section-title">1. 詳細自覚症状問診（気血水・陰陽寒熱）</div>
             <div class="checkbox-grid">
-                <label class="checkbox-item"><input type="checkbox" id="q_qi_1" data-cat="qi_def"> 疲れやすく、だるさが抜けない（気虚）</label>
-                <label class="checkbox-item"><input type="checkbox" id="q_qi_2" data-cat="qi_def"> 食後に眠気・胃もたれがする（気虚）</label>
-                <label class="checkbox-item"><input type="checkbox" id="q_qistag_1" data-cat="qi_stag"> イライラ・情緒不安定（気滞）</label>
-                <label class="checkbox-item"><input type="checkbox" id="q_qistag_2" data-cat="qi_stag"> 喉のつかえ感・ため息（気滞）</label>
-                <label class="checkbox-item"><input type="checkbox" id="q_blood_1" data-cat="blood_def"> 肌・髪が乾燥する（血虚）</label>
-                <label class="checkbox-item"><input type="checkbox" id="q_blood_2" data-cat="blood_def"> 立ちくらみ・こむら返り（血虚）</label>
-                <label class="checkbox-item"><input type="checkbox" id="q_oketsu_1" data-cat="blood_stag"> 肩こり・クマ・シミ（瘀血）</label>
-                <label class="checkbox-item"><input type="checkbox" id="q_oketsu_2" data-cat="blood_stag"> 生理痛が重い・血塊（瘀血）</label>
-                <label class="checkbox-item"><input type="checkbox" id="q_water_1" data-cat="water"> 顔や手足がむくみやすい（水滞）</label>
-                <label class="checkbox-item"><input type="checkbox" id="q_water_2" data-cat="water"> 雨天・気圧で頭痛やめまい（水滞）</label>
-                <label class="checkbox-item"><input type="checkbox" id="q_yang_1" data-cat="yang_def"> 手足や腰が極端に冷える（陽虚）</label>
-                <label class="checkbox-item"><input type="checkbox" id="q_yin_1" data-cat="yin_def"> 手足の裏がほてる・寝汗（陰虚）</label>
+                
+                <!-- 気虚 -->
+                <div class="symptom-group-title">⚡ 気虚（エネルギー・胃腸の働きの不足）</div>
+                <label class="checkbox-item"><input type="checkbox" id="q_qi_1" data-cat="qi_def" data-kw="疲労倦怠,虚弱体質" onchange="updateRealtimeSuggestions()"> 疲れやすく、だるさが抜けない</label>
+                <label class="checkbox-item"><input type="checkbox" id="q_qi_2" data-cat="qi_def" data-kw="食欲不振,胃もたれ,消化不良" onchange="updateRealtimeSuggestions()"> 食後に強い眠気・胃もたれがする</label>
+                <label class="checkbox-item"><input type="checkbox" id="q_qi_3" data-cat="qi_def" data-kw="息切れ,声が小さい,無気力" onchange="updateRealtimeSuggestions()"> 少し動くだけで息切れ・声に力がない</label>
+                <label class="checkbox-item"><input type="checkbox" id="q_qi_4" data-cat="qi_def" data-kw="かぜ,軟便,下痢" onchange="updateRealtimeSuggestions()"> 風邪を引きやすく、軟便・下痢傾向</label>
+
+                <!-- 気滞 -->
+                <div class="symptom-group-title">🌪️ 気滞（自律神経の乱れ・ストレス・気の停滞）</div>
+                <label class="checkbox-item"><input type="checkbox" id="q_qistag_1" data-cat="qi_stag" data-kw="イライラ,怒りっぽい,情緒不安定" onchange="updateRealtimeSuggestions()"> イライラしやすく怒りっぽい・情緒不安定</label>
+                <label class="checkbox-item"><input type="checkbox" id="q_qistag_2" data-cat="qi_stag" data-kw="喉のつかえ,梅核気,胸苦しい" onchange="updateRealtimeSuggestions()"> 喉につかえ感がある（梅核気）・ため息</label>
+                <label class="checkbox-item"><input type="checkbox" id="q_qistag_3" data-cat="qi_stag" data-kw="腹部膨満,お腹の張り,ガス" onchange="updateRealtimeSuggestions()"> お腹や胸が張る・ゲップやガスが多い</label>
+                <label class="checkbox-item"><input type="checkbox" id="q_qistag_4" data-cat="qi_stag" data-kw="精神不安,不眠症,動悸" onchange="updateRealtimeSuggestions()"> 不安感が強く、寝つきが悪い・動悸</label>
+
+                <!-- 血虚 -->
+                <div class="symptom-group-title">💧 血虚（血・栄養・うるおい不足）</div>
+                <label class="checkbox-item"><input type="checkbox" id="q_blood_1" data-cat="blood_def" data-kw="皮膚乾燥,爪の割れ,脱毛" onchange="updateRealtimeSuggestions()"> 肌や髪が乾燥する・爪が割れやすい</label>
+                <label class="checkbox-item"><input type="checkbox" id="q_blood_2" data-cat="blood_def" data-kw="貧血,立ちくらみ,めまい" onchange="updateRealtimeSuggestions()"> 立ちくらみ・めまい・目が疲れやすい</label>
+                <label class="checkbox-item"><input type="checkbox" id="q_blood_3" data-cat="blood_def" data-kw="こむら返り,手足のしびれ,筋肉痙攣" onchange="updateRealtimeSuggestions()"> 夜間に足がつる（こむら返り）・手足のしびれ</label>
+                <label class="checkbox-item"><input type="checkbox" id="q_blood_4" data-cat="blood_def" data-kw="多夢,不眠,物忘れ" onchange="updateRealtimeSuggestions()"> 夢を多く見て眠りが浅い・物忘れ</label>
+
+                <!-- 瘀血 -->
+                <div class="symptom-group-title">🩸 瘀血（血行不良・血の滞り）</div>
+                <label class="checkbox-item"><input type="checkbox" id="q_oketsu_1" data-cat="blood_stag" data-kw="肩こり,頭痛,腰痛" onchange="updateRealtimeSuggestions()"> 頑固な肩こり・刺すような頭痛や腰痛</label>
+                <label class="checkbox-item"><input type="checkbox" id="q_oketsu_2" data-cat="blood_stag" data-kw="生理痛,月経困難症,月経不順" onchange="updateRealtimeSuggestions()"> 生理痛が重い・血の塊（レバー状）が混じる</label>
+                <label class="checkbox-item"><input type="checkbox" id="q_oketsu_3" data-cat="blood_stag" data-kw="シミ,クマ,肌のくすみ" onchange="updateRealtimeSuggestions()"> 目の下にクマができやすい・シミやくすみ</label>
+                <label class="checkbox-item"><input type="checkbox" id="q_oketsu_4" data-cat="blood_stag" data-kw="皮下出血,アザ,痔" onchange="updateRealtimeSuggestions()"> ぶつけていないのにアザができる・痔の症状</label>
+
+                <!-- 水滞 -->
+                <div class="symptom-group-title">🌊 水滞（水分代謝異常・むくみ）</div>
+                <label class="checkbox-item"><input type="checkbox" id="q_water_1" data-cat="water" data-kw="むくみ,下肢むくみ,顔のむくみ" onchange="updateRealtimeSuggestions()"> 夕方に足がむくむ・朝起きた時の顔のむくみ</label>
+                <label class="checkbox-item"><input type="checkbox" id="q_water_2" data-cat="water" data-kw="気圧頭痛,雨天頭痛,めまい" onchange="updateRealtimeSuggestions()"> 雨の日や気圧変化で頭痛・めまい・ふらつき</label>
+                <label class="checkbox-item"><input type="checkbox" id="q_water_3" data-cat="water" data-kw="関節痛,重だるい,膝の腫れ" onchange="updateRealtimeSuggestions()"> 体や関節が重だるい・水太り傾向</label>
+                <label class="checkbox-item"><input type="checkbox" id="q_water_4" data-cat="water" data-kw="鼻水,くしゃみ,胃内停水" onchange="updateRealtimeSuggestions()"> 透明な水鼻がよく出る・お腹がぽちゃぽちゃ鳴る</label>
+
+                <!-- 陽虚（冷え） -->
+                <div class="symptom-group-title">❄️ 陽虚（深部の冷え・代謝低下）</div>
+                <label class="checkbox-item"><input type="checkbox" id="q_yang_1" data-cat="yang_def" data-kw="冷え症,手足の冷え,腰の冷え" onchange="updateRealtimeSuggestions()"> 手足や腰・お腹が極端に冷える（温まると楽）</label>
+                <label class="checkbox-item"><input type="checkbox" id="q_yang_2" data-cat="yang_def" data-kw="頻尿,夜間頻尿,残尿感" onchange="updateRealtimeSuggestions()"> トイレが近く、夜間に何回も起きる（頻尿）</label>
+
+                <!-- 陰虚（ほてり・乾燥） -->
+                <div class="symptom-group-title">🔥 陰虚（潤い不足・ほてり・のぼせ）</div>
+                <label class="checkbox-item"><input type="checkbox" id="q_yin_1" data-cat="yin_def" data-kw="ほてり,手足のほてり,寝汗" onchange="updateRealtimeSuggestions()"> 夕方〜夜に手足の裏がほてる・寝汗をかく</label>
+                <label class="checkbox-item"><input type="checkbox" id="q_yin_2" data-cat="yin_def" data-kw="口渇,喉の渇き,便秘" onchange="updateRealtimeSuggestions()"> 喉や口が乾きやすく冷たい水を好む・便がコロコロ</label>
+
             </div>
         </div>
 
@@ -441,23 +508,23 @@
                 <div class="shishin-group">
                     <h4>👅 舌診（舌質・舌苔・形態）</h4>
                     <div class="checkbox-grid" style="grid-template-columns: 1fr 1fr; padding: 4px 0;">
-                        <label class="checkbox-item"><input type="checkbox" id="t_pale" data-shishin="淡白舌(気血虚)"> 淡白（色白・気血虚）</label>
-                        <label class="checkbox-item"><input type="checkbox" id="t_red" data-shishin="紅舌・絳舌(熱/陰虚)"> 紅・深紅（熱・陰虚）</label>
-                        <label class="checkbox-item"><input type="checkbox" id="t_purple" data-shishin="紫暗・瘀斑(瘀血)"> 紫暗・シミ（瘀血）</label>
-                        <label class="checkbox-item"><input type="checkbox" id="t_white_moss" data-shishin="白苔(寒/湿)"> 白苔（寒・水分停滞）</label>
-                        <label class="checkbox-item"><input type="checkbox" id="t_yellow_moss" data-shishin="黄苔・厚苔(熱/湿熱)"> 黄厚苔（熱・湿熱）</label>
-                        <label class="checkbox-item"><input type="checkbox" id="t_teeth" data-shishin="歯痕舌(気虚/水滞)"> 歯痕・胖大（水・気虚）</label>
+                        <label class="checkbox-item"><input type="checkbox" id="t_pale" data-shishin="淡白舌(気血虚)" onchange="updateRealtimeSuggestions()"> 淡白（色白・気血虚）</label>
+                        <label class="checkbox-item"><input type="checkbox" id="t_red" data-shishin="紅舌・絳舌(熱/陰虚)" onchange="updateRealtimeSuggestions()"> 紅・深紅（熱・陰虚）</label>
+                        <label class="checkbox-item"><input type="checkbox" id="t_purple" data-shishin="紫暗・瘀斑(瘀血)" onchange="updateRealtimeSuggestions()"> 紫暗・シミ（瘀血）</label>
+                        <label class="checkbox-item"><input type="checkbox" id="t_white_moss" data-shishin="白苔(寒/湿)" onchange="updateRealtimeSuggestions()"> 白苔（寒・水分停滞）</label>
+                        <label class="checkbox-item"><input type="checkbox" id="t_yellow_moss" data-shishin="黄苔・厚苔(熱/湿熱)" onchange="updateRealtimeSuggestions()"> 黄厚苔（熱・湿熱）</label>
+                        <label class="checkbox-item"><input type="checkbox" id="t_teeth" data-shishin="歯痕舌(気虚/水滞)" onchange="updateRealtimeSuggestions()"> 歯痕・胖大（水・気虚）</label>
                     </div>
                 </div>
                 <div class="shishin-group">
                     <h4>🫄 腹診（腹力・腹証）</h4>
                     <div class="checkbox-grid" style="grid-template-columns: 1fr 1fr; padding: 4px 0;">
-                        <label class="checkbox-item"><input type="checkbox" id="a_shinka" data-shishin="心下痞鞭(胃虚/気滞)"> 心下痞鞭（心窩部つかえ）</label>
-                        <label class="checkbox-item"><input type="checkbox" id="a_kyokyo" data-shishin="胸脇苦満(柴胡剤適応)"> 胸脇苦満（肋骨下圧痛）</label>
-                        <label class="checkbox-item"><input type="checkbox" id="a_seika_fujin" data-shishin="臍下不仁(腎虚/八味地黄丸)"> 臍下不仁（下腹部無力）</label>
-                        <label class="checkbox-item"><input type="checkbox" id="a_shofuku" data-shishin="小腹急結(瘀血/桃核承気湯)"> 小腹急結（左下腹圧痛）</label>
-                        <label class="checkbox-item"><input type="checkbox" id="a_shinsui" data-shishin="胃内停水(水滞/五苓散)"> 胃内停水（ポチャポチャ音）</label>
-                        <label class="checkbox-item"><input type="checkbox" id="a_fukuchoku" data-shishin="腹直筋拘急(芍薬甘草湯)"> 腹直筋拘急（筋肉の緊張）</label>
+                        <label class="checkbox-item"><input type="checkbox" id="a_shinka" data-shishin="心下痞鞭(胃虚/気滞)" onchange="updateRealtimeSuggestions()"> 心下痞鞭（心窩部つかえ）</label>
+                        <label class="checkbox-item"><input type="checkbox" id="a_kyokyo" data-shishin="胸脇苦満(柴胡剤適応)" onchange="updateRealtimeSuggestions()"> 胸脇苦満（肋骨下圧痛）</label>
+                        <label class="checkbox-item"><input type="checkbox" id="a_seika_fujin" data-shishin="臍下不仁(腎虚/八味地黄丸)" onchange="updateRealtimeSuggestions()"> 臍下不仁（下腹部無力）</label>
+                        <label class="checkbox-item"><input type="checkbox" id="a_shofuku" data-shishin="小腹急結(瘀血/桃核承気湯)" onchange="updateRealtimeSuggestions()"> 小腹急結（左下腹圧痛）</label>
+                        <label class="checkbox-item"><input type="checkbox" id="a_shinsui" data-shishin="胃内停水(水滞/五苓散)" onchange="updateRealtimeSuggestions()"> 胃内停水（ポチャポチャ音）</label>
+                        <label class="checkbox-item"><input type="checkbox" id="a_fukuchoku" data-shishin="腹直筋拘急(芍薬甘草湯)" onchange="updateRealtimeSuggestions()"> 腹直筋拘急（筋肉の緊張）</label>
                     </div>
                 </div>
             </div>
@@ -465,6 +532,13 @@
 
         <div class="section-box no-print">
             <div class="section-title">3. 処方選定・生薬重複チェック＆調剤日数計算</div>
+            
+            <!-- リアルタイム処方サジェスト（最大10件表示＆主/併用ワンクリックセット） -->
+            <div id="realtimeSuggestArea" class="realtime-suggest-box">
+                <strong style="font-size:12px; color:var(--accent);">💡 チェック症状からのおすすめ処方候補（最大10件）:</strong>
+                <div id="realtimeSuggestList" style="margin-top:4px; font-size:11.5px; color:#666;">（上の症状にチェックを入れるとおすすめが表示されます）</div>
+            </div>
+
             <div class="calc-panel">
                 <div class="form-group">
                     <label>主処方（第1選択）</label>
@@ -531,7 +605,6 @@
                 </div>
             </div>
 
-            <!-- 過去の通院履歴 簡易一覧テーブル -->
             <div id="historyTableSection" style="margin-top: 24px; border-top: 1px dashed #d5cec2; padding-top: 12px; display: none;">
                 <strong style="font-size: 12px; color: var(--primary);">📋 過去の通院・処方履歴一覧</strong>
                 <table class="history-summary-table" id="historySummaryTable">
@@ -562,89 +635,89 @@
 // 1. 漢方処方データベース（105処方網羅）
 // ==========================================
 const KAMPO_DATABASE = [
-    { code: "41", name: "補中益気湯（ほちゅうえっきとう）", target: "qi_def", pattern: "虚証", tags: ["疲労倦怠", "食欲不振", "夏バテ", "胃下垂", "寝汗", "病後衰弱"], herbs: "人参, 黄耆, 白朮, 柴胡, 当帰, 升麻, 陳皮, 生姜, 大棗, 甘草" },
-    { code: "43", name: "六君子湯（りっくんしとう）", target: "qi_def", pattern: "虚証", tags: ["胃もたれ", "食欲不振", "心窩部つかえ", "消化不良", "胃炎", "逆流性食道炎"], herbs: "人参, 白朮, 茯苓, 半夏, 陳皮, 生姜, 大棗, 甘草" },
-    { code: "75", name: "四君子湯（しくんしとう）", target: "qi_def", pattern: "虚証", tags: ["胃腸虚弱", "下痢傾向", "痩せ型", "元気がない", "小児虚弱"], herbs: "人参, 白朮, 茯苓, 甘草, 生姜, 大棗" },
+    { code: "41", name: "補中益気湯（ほちゅうえっきとう）", target: "qi_def", pattern: "虚証", tags: ["疲労倦怠", "食欲不振", "夏バテ", "胃下垂", "寝汗", "病後衰弱", "息切れ", "声が小さい"], herbs: "人参, 黄耆, 白朮, 柴胡, 当帰, 升麻, 陳皮, 生姜, 大棗, 甘草" },
+    { code: "43", name: "六君子湯（りっくんしとう）", target: "qi_def", pattern: "虚証", tags: ["胃もたれ", "食欲不振", "心窩部つかえ", "消化不良", "胃炎", "逆流性食道炎", "眠気"], herbs: "人参, 白朮, 茯苓, 半夏, 陳皮, 生姜, 大棗, 甘草" },
+    { code: "75", name: "四君子湯（しくんしとう）", target: "qi_def", pattern: "虚証", tags: ["胃腸虚弱", "下痢傾向", "痩せ型", "元気がない", "小児虚弱", "軟便"], herbs: "人参, 白朮, 茯苓, 甘草, 生姜, 大棗" },
     { code: "136", name: "清暑益気湯（せいしょえっきとう）", target: "qi_def", pattern: "虚証", tags: ["夏バテ", "暑気あたり", "疲労倦怠", "自汗", "軟便・下痢"], herbs: "人参, 黄耆, 白朮, 麦門冬, 五味子, 当帰, 陳皮, 黄柏, 甘草" },
     { code: "102", name: "当帰湯（とうきとう）", target: "qi_def", pattern: "虚証", tags: ["背部痛", "腹痛", "胃痛", "冷え症", "消化不良"], herbs: "当帰, 人参, 黄耆, 桂枝, 芍薬, 地黄, 半夏, 厚朴, 乾姜, 甘草" },
     { code: "98", name: "黄耆建中湯（おうぎけんちゅうとう）", target: "qi_def", pattern: "虚証", tags: ["虚弱体質", "寝汗", "皮膚潰瘍", "疲労回復", "小児夜尿症"], herbs: "黄耆, 桂枝, 芍薬, 生姜, 大棗, 甘草, 膠飴" },
     { code: "99", name: "小建中湯（しょうけんちゅうとう）", target: "qi_def", pattern: "虚証", tags: ["小児腹痛", "虚弱体質", "夜尿症", "鼻血", "動悸", "夜泣き"], herbs: "桂枝, 芍薬, 生姜, 大棗, 甘草, 膠飴" },
-    { code: "100", name: "大建中湯（だいけんちゅうとう）", target: "qi_def", pattern: "著しい虚証", tags: ["腹部冷感・膨満感", "腸閉塞・イレウス予防", "腹痛", "便秘・下痢"], herbs: "山椒, 乾姜, 人参, 膠飴" },
-    { code: "50", name: "啓脾湯（けいひとう）", target: "qi_def", pattern: "虚証", tags: ["慢性下痢", "消化不良", "胃腸虚弱", "小児下痢"], herbs: "人参, 白朮, 茯苓, 甘草, 山薬, 蓮肉, 沢瀉, 陳皮, 山査子" },
+    { code: "100", name: "大建中湯（だいけんちゅうとう）", target: "qi_def", pattern: "著しい虚証", tags: ["腹部冷感・膨満感", "腸閉塞・イレウス予防", "腹痛", "便秘・下痢", "冷え"], herbs: "山椒, 乾姜, 人参, 膠飴" },
+    { code: "50", name: "啓脾湯（けいひとう）", target: "qi_def", pattern: "虚証", tags: ["慢性下痢", "消化不良", "胃腸虚弱", "小児下痢", "軟便"], herbs: "人参, 白朮, 茯苓, 甘草, 山薬, 蓮肉, 沢瀉, 陳皮, 山査子" },
     { code: "126", name: "麻杏薏甘湯（まきょうよくかんとう）", target: "qi_def", pattern: "中間証", tags: ["関節痛", "神経痛", "筋肉痛", "いぼ", "手足の腫れ"], herbs: "麻黄, 杏仁, よく苡仁, 甘草" },
     { code: "74", name: "調胃承気湯（ちょういじょうきとう）", target: "qi_def", pattern: "実証", tags: ["軽度便秘", "胃の熱", "腹部膨満"], herbs: "大黄, 芒硝, 甘草" },
     { code: "95", name: "滋陰降火湯（じいんこうかとう）", target: "qi_def", pattern: "虚証", tags: ["乾いた咳", "喉の渇き", "微熱", "寝汗", "高齢者気管支炎"], herbs: "地黄, 当帰, 白朮, 芍薬, 陳皮, 知母, 黄柏, 麦門冬, 天門冬, 甘草" },
-    { code: "16", name: "半夏厚朴湯（はんげこうぼくとう）", target: "qi_stag", pattern: "中間証", tags: ["喉のつかえ（梅核気）", "不安感", "動悸", "咳", "神経症"], herbs: "半夏, 厚朴, 茯苓, 生姜, 蘇葉" },
-    { code: "24", name: "加味逍遙散（かみしょうようさん）", target: "qi_stag", pattern: "虚〜中間証", tags: ["イライラ", "不定愁訴", "更年期障害", "ホットフラッシュ", "肩こり"], herbs: "柴胡, 芍薬, 当帰, 白朮, 茯苓, 牡丹皮, 山梔子, 生姜, 薄荷, 甘草" },
-    { code: "12", name: "柴胡加竜骨牡蛎湯（さいこかりゅうこつぼれいとう）", target: "qi_stag", pattern: "実証", tags: ["不眠症", "精神不安", "動悸", "神経過敏", "高血圧随伴症状"], herbs: "柴胡, 半夏, 茯苓, 桂枝, 黄芩, 生姜, 大棗, 人参, 竜骨, 牡蛎, 大黄" },
-    { code: "54", name: "抑肝散（よくかんさん）", target: "qi_stag", pattern: "中間証", tags: ["怒りっぽい", "神経症", "不眠症", "歯ぎしり", "認知症の周辺症状"], herbs: "柴胡, 釣藤鈎, 蒼朮, 茯苓, 当帰, 川芎, 甘草" },
-    { code: "83", name: "抑肝散加陳皮半夏（よくかんさんかちんぴはんげ）", target: "qi_stag", pattern: "虚〜中間証", tags: ["神経過敏", "胃腸虚弱", "不眠", "自律神経失調症", "更年期"], herbs: "抑肝散 + 陳皮, 半夏" },
+    { code: "16", name: "半夏厚朴湯（はんげこうぼくとう）", target: "qi_stag", pattern: "中間証", tags: ["喉のつかえ", "梅核気", "不安感", "動悸", "咳", "神経症", "ため息"], herbs: "半夏, 厚朴, 茯苓, 生姜, 蘇葉" },
+    { code: "24", name: "加味逍遙散（かみしょうようさん）", target: "qi_stag", pattern: "虚〜中間証", tags: ["イライラ", "不定愁訴", "更年期障害", "ホットフラッシュ", "肩こり", "情緒不安定"], herbs: "柴胡, 芍薬, 当帰, 白朮, 茯苓, 牡丹皮, 山梔子, 生姜, 薄荷, 甘草" },
+    { code: "12", name: "柴胡加竜骨牡蛎湯（さいこかりゅうこつぼれいとう）", target: "qi_stag", pattern: "実証", tags: ["不眠症", "精神不安", "動悸", "神経過敏", "高血圧随伴症状", "胸苦しい"], herbs: "柴胡, 半夏, 茯苓, 桂枝, 黄芩, 生姜, 大棗, 人参, 竜骨, 牡蛎, 大黄" },
+    { code: "54", name: "抑肝散（よくかんさん）", target: "qi_stag", pattern: "中間証", tags: ["怒りっぽい", "神経症", "不眠症", "歯ぎしり", "認知症の周辺症状", "イライラ"], herbs: "柴胡, 釣藤鈎, 蒼朮, 茯苓, 当帰, 川芎, 甘草" },
+    { code: "83", name: "抑肝散加陳皮半夏（よくかんさんかちんぴはんげ）", target: "qi_stag", pattern: "虚〜中間証", tags: ["神経過敏", "胃腸虚弱", "不眠", "自律神経失調症", "更年期", "お腹の張り"], herbs: "抑肝散 + 陳皮, 半夏" },
     { code: "35", name: "四逆散（しぎゃくさん）", target: "qi_stag", pattern: "実証", tags: ["胸腹部の張り", "ストレス性胃痛", "自律神経失調", "肋間神経痛"], herbs: "柴胡, 枳実, 芍薬, 甘草" },
-    { code: "9", name: "小柴胡湯（しょうさいことう）", target: "qi_stag", pattern: "中間証", tags: ["口の苦味", "食欲不振", "往来寒熱", "慢性肝炎", "胃炎"], herbs: "柴胡, 半夏, 黄芩, 人参, 生姜, 大棗, 甘草" },
-    { code: "8", name: "大柴胡湯（だいさいことう）", target: "qi_stag", pattern: "実証", tags: ["胸脇苦満", "肥満症", "高血圧", "便秘", "肩こり", "脂肪肝"], herbs: "柴胡, 黄芩, 芍薬, 半夏, 生姜, 枳実, 大棗, 大黄" },
-    { code: "26", name: "桂枝加竜骨牡蛎湯（けいしかりゅうこつぼれいとう）", target: "qi_stag", pattern: "虚証", tags: ["神経過敏", "眼精疲労", "不眠症", "小児夜泣き", "遺精"], herbs: "桂枝, 芍薬, 生姜, 大棗, 甘草, 竜骨, 牡蛎" },
-    { code: "70", name: "香蘇散（こうそさん）", target: "qi_stag", pattern: "虚証", tags: ["初期風邪", "胃腸虚弱者の抑うつ", "頭痛", "気分のふさぎ"], herbs: "香附子, 蘇葉, 陳皮, 甘草, 生姜" },
+    { code: "9", name: "小柴胡湯（しょうさいことう）", target: "qi_stag", pattern: "中間証", tags: ["口の苦味", "食欲不振", "往来寒熱", "慢性肝炎", "胃炎", "吐き気"], herbs: "柴胡, 半夏, 黄芩, 人参, 生姜, 大棗, 甘草" },
+    { code: "8", name: "大柴胡湯（だいさいことう）", target: "qi_stag", pattern: "実証", tags: ["胸脇苦満", "肥満症", "高血圧", "便秘", "肩こり", "脂肪肝", "イライラ"], herbs: "柴胡, 黄芩, 芍薬, 半夏, 生姜, 枳実, 大棗, 大黄" },
+    { code: "26", name: "桂枝加竜骨牡蛎湯（けいしかりゅうこつぼれいとう）", target: "qi_stag", pattern: "虚証", tags: ["神経過敏", "眼精疲労", "不眠症", "小児夜泣き", "遺精", "精神不安"], herbs: "桂枝, 芍薬, 生姜, 大棗, 甘草, 竜骨, 牡蛎" },
+    { code: "70", name: "香蘇散（こうそさん）", target: "qi_stag", pattern: "虚証", tags: ["初期風邪", "胃腸虚弱者の抑うつ", "頭痛", "気分のふさぎ", "ため息"], herbs: "香附子, 蘇葉, 陳皮, 甘草, 生姜" },
     { code: "31", name: "柴胡桂枝湯（さいこけいしとう）", target: "qi_stag", pattern: "中間証", tags: ["胃腸炎", "かぜの中期", "微熱", "腹痛", "自律神経症状"], herbs: "小柴胡湯 + 桂枝湯" },
     { code: "73", name: "柴胡桂枝乾姜湯（さいこけいしかんきょうとう）", target: "qi_stag", pattern: "虚証", tags: ["冷えのぼせ", "不眠", "動悸", "更年期神経症", "頭汗"], herbs: "柴胡, 桂枝, 乾姜, 黄芩, 栝楼根, 牡蛎, 甘草" },
-    { code: "11", name: "柴朴湯（さいぼくとう）", target: "qi_stag", pattern: "中間証", tags: ["気管支喘息", "咳", "咽喉頭異常感", "不安神経症"], herbs: "小柴胡湯 + 半夏厚朴湯" },
-    { code: "71", name: "四物湯（しもつとう）", target: "blood_def", pattern: "虚証", tags: ["皮膚乾燥", "貧血", "月経不順", "冷え症", "しもやけ", "産後衰弱"], herbs: "地黄, 当帰, 芍薬, 川芎" },
-    { code: "23", name: "当帰芍薬散（とうきしゃくやくさん）", target: "blood_def", pattern: "虚証", tags: ["貧血", "冷え症", "むくみ", "月経痛", "不妊症", "立ちくらみ"], herbs: "当帰, 芍薬, 川芎, 白朮, 茯苓, 沢瀉" },
-    { code: "108", name: "人参養栄湯（にんじんようえいとう）", target: "blood_def", pattern: "著しい虚証", tags: ["病後衰弱", "食欲不振", "貧血", "手足の冷え", "息切れ", "脱毛"], herbs: "人参, 当帰, 地黄, 白朮, 茯苓, 黄耆, 桂枝, 芍薬, 陳皮, 遠志, 五味子, 甘草" },
-    { code: "48", name: "十全大補湯（じゅうぜんたいほとう）", target: "blood_def", pattern: "虚証", tags: ["気血両虚", "全身倦怠", "貧血", "皮膚乾燥", "寝汗", "病後体力低下"], herbs: "四君子湯 + 四物湯 + 黄耆, 肉桂" },
-    { code: "68", name: "芍薬甘草湯（しゃくやくかんぞうとう）", target: "blood_def", pattern: "体力不問", tags: ["こむら返り", "急激な筋肉痙攣", "胃痙攣", "胆石仙痛", "腰痛"], herbs: "芍薬, 甘草" },
-    { code: "57", name: "温清飲（うんせいいん）", target: "blood_def", pattern: "中間証", tags: ["皮膚そう痒症", "アトピー性皮膚炎", "月経不順", "神経症", "のぼせ"], herbs: "四物湯 + 黄連解毒湯" },
-    { code: "65", name: "帰脾湯（きひとう）", target: "blood_def", pattern: "虚証", tags: ["不眠症", "精神不安", "貧血", "物忘れ", "神経衰弱"], herbs: "人参, 黄耆, 白朮, 茯苓, 酸棗仁, 竜眼肉, 当帰, 遠志, 生姜, 大棗, 甘草, 木香" },
-    { code: "137", name: "加味帰脾湯（かみきひとう）", target: "blood_def", pattern: "虚証", tags: ["貧血", "不眠症", "精神不安", "微熱", "抑うつ", "更年期障害"], herbs: "帰脾湯 + 柴胡, 山梔子" },
+    { code: "11", name: "柴朴湯（さいぼくとう）", target: "qi_stag", pattern: "中間証", tags: ["気管支喘息", "咳", "咽喉頭異常感", "不安神経症", "喉のつかえ"], herbs: "小柴胡湯 + 半夏厚朴湯" },
+    { code: "71", name: "四物湯（しもつとう）", target: "blood_def", pattern: "虚証", tags: ["皮膚乾燥", "貧血", "月経不順", "冷え症", "しもやけ", "産後衰弱", "爪の割れ"], herbs: "地黄, 当帰, 芍薬, 川芎" },
+    { code: "23", name: "当帰芍薬散（とうきしゃくやくさん）", target: "blood_def", pattern: "虚証", tags: ["貧血", "冷え症", "むくみ", "月経痛", "不妊症", "立ちくらみ", "めまい"], herbs: "当帰, 芍薬, 川芎, 白朮, 茯苓, 沢瀉" },
+    { code: "108", name: "人参養栄湯（にんじんようえいとう）", target: "blood_def", pattern: "著しい虚証", tags: ["病後衰弱", "食欲不振", "貧血", "手足の冷え", "息切れ", "脱毛", "皮膚乾燥", "不眠"], herbs: "人参, 当帰, 地黄, 白朮, 茯苓, 黄耆, 桂枝, 芍薬, 陳皮, 遠志, 五味子, 甘草" },
+    { code: "48", name: "十全大補湯（じゅうぜんたいほとう）", target: "blood_def", pattern: "虚証", tags: ["気血両虚", "全身倦怠", "貧血", "皮膚乾燥", "寝汗", "病後体力低下", "冷え"], herbs: "四君子湯 + 四物湯 + 黄耆, 肉桂" },
+    { code: "68", name: "芍薬甘草湯（しゃくやくかんぞうとう）", target: "blood_def", pattern: "体力不問", tags: ["こむら返り", "急激な筋肉痙攣", "胃痙攣", "胆石仙痛", "腰痛", "足がつる"], herbs: "芍薬, 甘草" },
+    { code: "57", name: "温清飲（うんせいいん）", target: "blood_def", pattern: "中間証", tags: ["皮膚そう痒症", "アトピー性皮膚炎", "月経不順", "神経症", "のぼせ", "皮膚乾燥"], herbs: "四物湯 + 黄連解毒湯" },
+    { code: "65", name: "帰脾湯（きひとう）", target: "blood_def", pattern: "虚証", tags: ["不眠症", "精神不安", "貧血", "物忘れ", "神経衰弱", "多夢"], herbs: "人参, 黄耆, 白朮, 茯苓, 酸棗仁, 竜眼肉, 当帰, 遠志, 生姜, 大棗, 甘草, 木香" },
+    { code: "137", name: "加味帰脾湯（かみきひとう）", target: "blood_def", pattern: "虚証", tags: ["貧血", "不眠症", "精神不安", "微熱", "抑うつ", "更年期障害", "多夢", "物忘れ"], herbs: "帰脾湯 + 柴胡, 山梔子" },
     { code: "77", name: "芎帰膠艾湯（きゅうききょうがいとう）", target: "blood_def", pattern: "虚証", tags: ["不正出血", "過多月経", "貧血", "血尿", "痔出血"], herbs: "地黄, 当帰, 芍薬, 川芎, 阿膠, 艾葉, 甘草" },
     { code: "103", name: "酸棗仁湯（さんそうにんとう）", target: "blood_def", pattern: "虚証", tags: ["心身疲労による不眠", "多夢", "神経過敏", "自汗"], herbs: "酸棗仁, 茯苓, 知母, 川芎, 甘草" },
-    { code: "37", name: "半夏白朮天麻湯（はんげびゃくじゅつてんまとう）", target: "blood_def", pattern: "虚証", tags: ["胃腸虚弱者のめまい", "頭痛", "嘔気", "メニエール病"], herbs: "半夏, 白朮, 天麻, 茯苓, 陳皮, 人参, 黄耆, 乾姜, 黄柏, 麦芽, 生姜, 神曲" },
-    { code: "106", name: "温経湯（うんけいとう）", target: "blood_def", pattern: "虚証", tags: ["手掌角化症・手あれ", "月経不順", "不妊症", "足腰の冷え", "下腹部痛"], herbs: "当帰, 芍薬, 川芎, 地黄, 人参, 桂枝, 牡丹皮, 半夏, 麦門冬, 阿膠, 生姜, 甘草" },
-    { code: "25", name: "桂枝茯苓丸（けいしぶくりょうがん）", target: "blood_stag", pattern: "中間〜実証", tags: ["肩こり", "頭痛", "生理痛", "のぼせ足冷え", "下腹部圧痛", "シミ"], herbs: "桂枝, 茯苓, 牡丹皮, 桃仁, 芍薬" },
-    { code: "125", name: "桂枝茯苓丸加よく苡仁", target: "blood_stag", pattern: "中間証", tags: ["にきび", "肌荒れ", "しみ", "手足の荒れ", "月経不順"], herbs: "桂枝茯苓丸 + よく苡仁" },
-    { code: "61", name: "桃核承気湯（とうかくじょうきとう）", target: "blood_stag", pattern: "実証", tags: ["頑固な便秘", "月経困難症", "精神興奮・イライラ", "高血圧", "腰痛"], herbs: "桃仁, 大黄, 芒硝, 桂枝, 甘草" },
-    { code: "105", name: "通導散（つうどうさん）", target: "blood_stag", pattern: "実証", tags: ["慢性便秘", "打撲", "腰痛", "月経不順", "高血圧のぼせ"], herbs: "当帰, 大黄, 芒硝, 紅花, 蘇木, 枳実, 厚朴, 陳皮, 木通, 甘草" },
-    { code: "84", name: "大黄牡丹皮湯（だいおうぼたんぴとう）", target: "blood_stag", pattern: "実証", tags: ["下腹部痛", "便秘", "痔疾", "月経不順", "虫垂炎初期"], herbs: "大黄, 牡丹皮, 桃仁, 冬瓜子, 芒硝" },
+    { code: "37", name: "半夏白朮天麻湯（はんげびゃくじゅつてんまとう）", target: "blood_def", pattern: "虚証", tags: ["胃腸虚弱者のめまい", "頭痛", "嘔気", "メニエール病", "立ちくらみ"], herbs: "半夏, 白朮, 天麻, 茯苓, 陳皮, 人参, 黄耆, 乾姜, 黄柏, 麦芽, 生姜, 神曲" },
+    { code: "106", name: "温経湯（うんけいとう）", target: "blood_def", pattern: "虚証", tags: ["手掌角化症・手あれ", "月経不順", "不妊症", "足腰の冷え", "下腹部痛", "皮膚乾燥"], herbs: "当帰, 芍薬, 川芎, 地黄, 人参, 桂枝, 牡丹皮, 半夏, 麦門冬, 阿膠, 生姜, 甘草" },
+    { code: "25", name: "桂枝茯苓丸（けいしぶくりょうがん）", target: "blood_stag", pattern: "中間〜実証", tags: ["肩こり", "頭痛", "生理痛", "のぼせ足冷え", "下腹部圧痛", "シミ", "クマ"], herbs: "桂枝, 茯苓, 牡丹皮, 桃仁, 芍薬" },
+    { code: "125", name: "桂枝茯苓丸加よく苡仁", target: "blood_stag", pattern: "中間証", tags: ["にきび", "肌荒れ", "しみ", "手足の荒れ", "月経不順", "肩こり"], herbs: "桂枝茯苓丸 + よく苡仁" },
+    { code: "61", name: "桃核承気湯（とうかくじょうきとう）", target: "blood_stag", pattern: "実証", tags: ["頑固な便秘", "月経困難症", "精神興奮・イライラ", "高血圧", "腰痛", "生理痛"], herbs: "桃仁, 大黄, 芒硝, 桂枝, 甘草" },
+    { code: "105", name: "通導散（つうどうさん）", target: "blood_stag", pattern: "実証", tags: ["慢性便秘", "打撲", "腰痛", "月経不順", "高血圧のぼせ", "アザ"], herbs: "当帰, 大黄, 芒硝, 紅花, 蘇木, 枳実, 厚朴, 陳皮, 木通, 甘草" },
+    { code: "84", name: "大黄牡丹皮湯（だいおうぼたんぴとう）", target: "blood_stag", pattern: "実証", tags: ["下腹部痛", "便秘", "痔疾", "月経不順", "虫垂炎初期", "痔"], herbs: "大黄, 牡丹皮, 桃仁, 冬瓜子, 芒硝" },
     { code: "59", name: "治頭瘡一方（ぢづそういっぽう）", target: "blood_stag", pattern: "体力不問", tags: ["乳幼児の湿疹", "頭部湿疹", "脂漏性皮膚炎", "かゆみ"], herbs: "連翹, 蒼朮, センキュウ, 忍冬, 紅花, 防風, 甘草, 大黄" },
     { code: "78", name: "麻杏甘石湯（まきょうかんせきとう）", target: "blood_stag", pattern: "中間〜実証", tags: ["激しい咳", "小児喘息", "気管支炎", "口渇"], herbs: "麻黄, 杏仁, 石膏, 甘草" },
     { code: "115", name: "胃苓湯（いれいとう）", target: "blood_stag", pattern: "中間証", tags: ["水様性下痢", "急性胃腸炎", "夏冷え", "腹痛", "むくみ"], herbs: "平胃散 + 五苓散" },
     { code: "138", name: "桔梗湯（ききょうとう）", target: "blood_stag", pattern: "体力不問", tags: ["急性咽頭炎", "扁桃炎", "のどの激痛・腫れ"], herbs: "桔梗, 甘草" },
-    { code: "17", name: "五苓散（ごれいさん）", target: "water", pattern: "中間証", tags: ["むくみ", "気圧頭痛", "二日酔い", "口渇", "急性下痢", "嘔吐", "めまい"], herbs: "猪苓, 茯苓, 白朮, 沢瀉, 桂枝" },
-    { code: "39", name: "苓桂朮甘湯（りょうけいじゅつかんとう）", target: "water", pattern: "虚〜中間証", tags: ["めまい", "ふらつき", "立ちくらみ", "動悸", "耳鳴り", "頭痛"], herbs: "茯苓, 桂枝, 白朮, 甘草" },
-    { code: "20", name: "防已黄耆湯（ぼういおうぎとう）", target: "water", pattern: "虚証", tags: ["水太り・色白", "多汗症", "膝関節の腫れ・水", "下肢むくみ"], herbs: "防已, 黄耆, 白朮, 生姜, 大棗, 甘草" },
-    { code: "62", name: "防風通聖散（ぼうふうつうしょうさん）", target: "water", pattern: "実証", tags: ["内臓脂肪肥満", "便秘", "むくみ", "高血圧随伴症状", "吹き出物"], herbs: "防風, 麻黄, 大黄, 芒硝, 石膏, 黄芩, 当帰, 芍薬, 川芎, 白朮 など18味" },
+    { code: "17", name: "五苓散（ごれいさん）", target: "water", pattern: "中間証", tags: ["むくみ", "気圧頭痛", "二日酔い", "口渇", "急性下痢", "嘔吐", "めまい", "雨天頭痛"], herbs: "猪苓, 茯苓, 白朮, 沢瀉, 桂枝" },
+    { code: "39", name: "苓桂朮甘湯（りょうけいじゅつかんとう）", target: "water", pattern: "虚〜中間証", tags: ["めまい", "ふらつき", "立ちくらみ", "動悸", "耳鳴り", "頭痛", "気圧頭痛"], herbs: "茯苓, 桂枝, 白朮, 甘草" },
+    { code: "20", name: "防已黄耆湯（ぼういおうぎとう）", target: "water", pattern: "虚証", tags: ["水太り", "多汗症", "膝関節の腫れ", "下肢むくみ", "関節痛", "重だるい"], herbs: "防已, 黄耆, 白朮, 生姜, 大棗, 甘草" },
+    { code: "62", name: "防風通聖散（ぼうふうつうしょうさん）", target: "water", pattern: "実証", tags: ["内臓脂肪肥満", "便秘", "むくみ", "高血圧随伴症状", "吹き出物", "水太り"], herbs: "防風, 麻黄, 大黄, 芒硝, 石膏, 黄芩, 当帰, 芍薬, 川芎, 白朮 など18味" },
     { code: "114", name: "柴苓湯（さいれいとう）", target: "water", pattern: "中間証", tags: ["むくみ", "急性胃腸炎", "口渇", "尿量減少", "ネフローゼ", "気管支喘息"], herbs: "小柴胡湯 + 五苓散" },
-    { code: "18", name: "桂枝加朮附湯（けいしかじゅつぶとう）", target: "water", pattern: "虚証", tags: ["神経痛", "関節痛", "冷え性", "手足のこわばり", "筋肉痛"], herbs: "桂枝, 芍薬, 生姜, 大棗, 甘草, 白朮, 附子" },
-    { code: "119", name: "苓甘姜味辛夏仁湯（りょうかんきょうみしんげにんとう）", target: "water", pattern: "虚証", tags: ["水様性痰・透明な鼻水", "喘息", "高齢者の湿性咳", "冷え"], herbs: "茯苓, 甘草, 乾姜, 五味子, 細辛, 半夏, 杏仁" },
-    { code: "19", name: "小青竜湯（しょうせいりゅうとう）", target: "water", pattern: "虚〜中間証", tags: ["花粉症", "アレルギー性鼻炎", "水様性鼻水・くしゃみ", "気管支炎"], herbs: "麻黄, 芍薬, 細辛, 乾姜, 甘草, 桂枝, 五味子, 半夏" },
-    { code: "79", name: "平胃散（へいいさん）", target: "water", pattern: "中間証", tags: ["胃もたれ", "消化不良", "食欲不振", "腹部膨満", "軟便"], herbs: "蒼朮, 厚朴, 陳皮, 甘草, 生姜, 大棗" },
-    { code: "40", name: "猪苓湯（ちょれいとう）", target: "water", pattern: "中間証", tags: ["排尿痛", "頻尿", "残尿感", "血尿", "膀胱炎", "尿道炎"], herbs: "猪苓, 茯苓, 沢瀉, 阿膠, 滑石" },
+    { code: "18", name: "桂枝加朮附湯（けいしかじゅつぶとう）", target: "water", pattern: "虚証", tags: ["神経痛", "関節痛", "冷え性", "手足のこわばり", "筋肉痛", "重だるい"], herbs: "桂枝, 芍薬, 生姜, 大棗, 甘草, 白朮, 附子" },
+    { code: "119", name: "苓甘姜味辛夏仁湯（りょうかんきょうみしんげにんとう）", target: "water", pattern: "虚証", tags: ["水様性痰", "透明な鼻水", "喘息", "高齢者の湿性咳", "冷え", "鼻水"], herbs: "茯苓, 甘草, 乾姜, 五味子, 細辛, 半夏, 杏仁" },
+    { code: "19", name: "小青竜湯（しょうせいりゅうとう）", target: "water", pattern: "虚〜中間証", tags: ["花粉症", "アレルギー性鼻炎", "水様性鼻水", "くしゃみ", "気管支炎", "鼻水"], herbs: "麻黄, 芍薬, 細辛, 乾姜, 甘草, 桂枝, 五味子, 半夏" },
+    { code: "79", name: "平胃散（へいいさん）", target: "water", pattern: "中間証", tags: ["胃もたれ", "消化不良", "食欲不振", "腹部膨満", "軟便", "胃内停水"], herbs: "蒼朮, 厚朴, 陳皮, 甘草, 生姜, 大棗" },
+    { code: "40", name: "猪苓湯（ちょれいとう）", target: "water", pattern: "中間証", tags: ["排尿痛", "頻尿", "残尿感", "血尿", "膀胱炎", "尿道炎", "むくみ"], herbs: "猪苓, 茯苓, 沢瀉, 阿膠, 滑石" },
     { code: "76", name: "猪苓湯合四物湯（ちょれいとうごうしもつとう）", target: "water", pattern: "中間証", tags: ["慢性膀胱炎", "排尿痛", "皮膚乾燥", "血尿"], herbs: "猪苓湯 + 四物湯" },
     { code: "1", name: "葛根湯（かっこんとう）", target: "water", pattern: "中間〜実証", tags: ["初期かぜ", "悪寒・発熱", "無汗", "肩こり", "首筋のこり", "頭痛"], herbs: "葛根, 麻黄, 桂枝, 芍薬, 生姜, 大棗, 甘草" },
     { code: "27", name: "麻黄湯（まおうとう）", target: "water", pattern: "実証", tags: ["インフルエンザ初期", "高熱", "悪寒", "関節痛", "激しい咳"], herbs: "麻黄, 桂枝, 杏仁, 甘草" },
     { code: "45", name: "桂枝湯（けいしとう）", target: "water", pattern: "虚証", tags: ["虚弱者の初期かぜ", "自然発汗", "頭痛", "悪寒"], herbs: "桂枝, 芍薬, 生姜, 大棗, 甘草" },
-    { code: "2", name: "葛根湯加川芎辛夷", target: "water", pattern: "中間〜実証", tags: ["慢性鼻炎", "蓄膿症（副鼻腔炎）", "鼻づまり", "頭重感"], herbs: "葛根湯 + 川芎, 辛夷" },
+    { code: "2", name: "葛根湯加川芎辛夷", target: "water", pattern: "中間〜実証", tags: ["慢性鼻炎", "蓄膿症（副鼻腔炎）", "鼻づまり", "頭重感", "鼻水"], herbs: "葛根湯 + 川芎, 辛夷" },
     { code: "51", name: "辛夷清肺湯（しんいせいはいとう）", target: "water", pattern: "中間証", tags: ["慢性鼻炎", "蓄膿症", "粘調な黄色い鼻汁", "鼻づまり", "口渇"], herbs: "辛夷, 知母, 黄芩, 山梔子, 麦門冬, 百合, 石膏, 升麻, 枇杷葉" },
-    { code: "7", name: "八味地黄丸（はちみじおうがん）", target: "yang_def", pattern: "中間〜虚証", tags: ["腰痛", "下半身の冷え", "頻尿", "夜間尿", "かすみ目", "前立腺肥大"], herbs: "地黄, 山茱萸, 山薬, 沢瀉, 茯苓, 牡丹皮, 桂枝, 附子" },
-    { code: "107", name: "牛車腎気丸（ごしゃじんきがん）", target: "yang_def", pattern: "中間〜虚証", tags: ["下肢痛・しびれ", "重度腰痛", "むくみ", "夜間頻尿", "坐骨神経痛"], herbs: "八味地黄丸 + 牛膝, 車前子" },
-    { code: "30", name: "真武湯（しんぶとう）", target: "yang_def", pattern: "虚証", tags: ["深部冷え", "水様性下痢", "めまい・ふらつき", "全身倦怠感", "腹痛"], herbs: "茯苓, 芍薬, 白朮, 生姜, 附子" },
-    { code: "38", name: "当帰四逆加呉茱萸生姜湯", target: "yang_def", pattern: "虚証", tags: ["重度の手足末端冷え症", "しもやけ", "下腹部痛", "頭痛", "腰痛"], herbs: "当帰, 桂枝, 芍薬, 細辛, 通草, 呉茱萸, 生姜, 大棗, 甘草" },
-    { code: "128", name: "麻黄附子細辛湯（まおうぶしさいしんとう）", target: "yang_def", pattern: "虚証", tags: ["高齢者の初期風邪", "強い悪寒", "アレルギー性鼻炎", "咳"], herbs: "麻黄, 附子, 細辛" },
+    { code: "7", name: "八味地黄丸（はちみじおうがん）", target: "yang_def", pattern: "中間〜虚証", tags: ["腰痛", "下半身の冷え", "頻尿", "夜間尿", "かすみ目", "前立腺肥大", "冷え症", "夜間頻尿"], herbs: "地黄, 山茱萸, 山薬, 沢瀉, 茯苓, 牡丹皮, 桂枝, 附子" },
+    { code: "107", name: "牛車腎気丸（ごしゃじんきがん）", target: "yang_def", pattern: "中間〜虚証", tags: ["下肢痛・しびれ", "重度腰痛", "むくみ", "夜間頻尿", "坐骨神経痛", "冷え症", "頻尿"], herbs: "八味地黄丸 + 牛膝, 車前子" },
+    { code: "30", name: "真武湯（しんぶとう）", target: "yang_def", pattern: "虚証", tags: ["深部冷え", "水様性下痢", "めまい・ふらつき", "全身倦怠感", "腹痛", "冷え症"], herbs: "茯苓, 芍薬, 白朮, 生姜, 附子" },
+    { code: "38", name: "当帰四逆加呉茱萸生姜湯", target: "yang_def", pattern: "虚証", tags: ["重度の手足末端冷え症", "しもやけ", "下腹部痛", "頭痛", "腰痛", "手足の冷え"], herbs: "当帰, 桂枝, 芍薬, 細辛, 通草, 呉茱萸, 生姜, 大棗, 甘草" },
+    { code: "128", name: "麻黄附子細辛湯（まおうぶしさいしんとう）", target: "yang_def", pattern: "虚証", tags: ["高齢者の初期風邪", "強い悪寒", "アレルギー性鼻炎", "咳", "冷え"], herbs: "麻黄, 附子, 細辛" },
     { code: "60", name: "桂枝加附子湯（けいしかぶしとう）", target: "yang_def", pattern: "著しい虚証", tags: ["強い悪寒", "多汗・冷や汗", "関節痛", "手足の冷え"], herbs: "桂枝湯 + 附子" },
     { code: "88", name: "二朮湯（にじゅつとう）", target: "yang_def", pattern: "中間証", tags: ["五十肩", "肩関節痛", "腕の挙上困難", "冷えによる関節痛"], herbs: "蒼朮, 白朮, 茯苓, 半夏, 陳皮, 香附子, 天南星, 威霊仙, 羌活, 黄芩, 甘草, 生姜" },
     { code: "53", name: "治打撲一方（ぢだぼくいっぽう）", target: "yang_def", pattern: "中間証", tags: ["打撲傷", "捻挫", "皮下出血", "腫脹・疼痛"], herbs: "川芎, 川骨, 桂枝, 撲樕, 大黄, 丁香, 甘草" },
-    { code: "63", name: "五積散（ごしゃくさん）", target: "yang_def", pattern: "中間証", tags: ["冷えによる腰痛", "関節痛", "月経痛", "更年期障害", "胃腸炎"], herbs: "当帰, 芍薬, 川芎, 白朮, 茯苓, 半夏, 陳皮, 厚朴, 肉桂, 乾姜, 麻黄 など16味" },
+    { code: "63", name: "五積散（ごしゃくさん）", target: "yang_def", pattern: "中間証", tags: ["冷えによる腰痛", "関節痛", "月経痛", "更年期障害", "胃腸炎", "手足の冷え"], herbs: "当帰, 芍薬, 川芎, 白朮, 茯苓, 半夏, 陳皮, 厚朴, 肉桂, 乾姜, 麻黄 など16味" },
     { code: "97", name: "大防風湯（だいぼうふうとう）", target: "yang_def", pattern: "著しい虚証", tags: ["慢性関節リウマチ", "下肢関節痛", "冷え症", "筋肉萎縮"], herbs: "防風, 黄耆, 当帰, 芍薬, 白朮, 熟地黄, 人参, 杜仲, 牛膝, 附子, 羌活 など16味" },
     { code: "127", name: "麻杏甘石湯加減", target: "yang_def", pattern: "中間証", tags: ["咳", "喘息", "関節痛"], herbs: "麻黄, 杏仁, 甘草, 石膏" },
-    { code: "87", name: "六味丸（ろくみがん）", target: "yin_def", pattern: "中間〜虚証", tags: ["手足のほてり", "口渇", "排尿困難", "夜尿症", "小児発育遅延", "かゆみ"], herbs: "地黄, 山茱萸, 山薬, 沢瀉, 茯苓, 牡丹皮" },
-    { code: "29", name: "麦門冬湯（ばくもんどうとう）", target: "yin_def", pattern: "虚〜中間証", tags: ["激しい乾いた咳", "喉の乾燥感・違和感", "気管支炎", "声枯れ", "咽頭炎"], herbs: "麦門冬, 半夏, 粳米, 大棗, 人参, 甘草" },
-    { code: "15", name: "黄連解毒湯（おうれんげどくとう）", target: "yin_def", pattern: "実証", tags: ["強いのぼせ", "イライラ", "不眠症", "高血圧", "二日酔い", "湿疹"], herbs: "黄連, 黄芩, 黄柏, 山梔子" },
-    { code: "34", name: "白虎加人参湯（びゃっこかにんじんとう）", target: "yin_def", pattern: "実証", tags: ["激しい口渇", "強いほてり", "多汗", "皮膚炎", "熱中症", "糖尿病初期"], herbs: "知母, 石膏, 甘草, 粳米, 人参" },
+    { code: "87", name: "六味丸（ろくみがん）", target: "yin_def", pattern: "中間〜虚証", tags: ["手足のほてり", "口渇", "排尿困難", "夜尿症", "小児発育遅延", "かゆみ", "ほてり", "喉の渇き"], herbs: "地黄, 山茱萸, 山薬, 沢瀉, 茯苓, 牡丹皮" },
+    { code: "29", name: "麦門冬湯（ばくもんどうとう）", target: "yin_def", pattern: "虚〜中間証", tags: ["激しい乾いた咳", "喉の乾燥感・違和感", "気管支炎", "声枯れ", "咽頭炎", "喉の渇き"], herbs: "麦門冬, 半夏, 粳米, 大棗, 人参, 甘草" },
+    { code: "15", name: "黄連解毒湯（おうれんげどくとう）", target: "yin_def", pattern: "実証", tags: ["強いのぼせ", "イライラ", "不眠症", "高血圧", "二日酔い", "湿疹", "ほてり"], herbs: "黄連, 黄芩, 黄柏, 山梔子" },
+    { code: "34", name: "白虎加人参湯（びゃっこかにんじんとう）", target: "yin_def", pattern: "実証", tags: ["激しい口渇", "強いほてり", "多汗", "皮膚炎", "熱中症", "糖尿病初期", "喉の渇き"], herbs: "知母, 石膏, 甘草, 粳米, 人参" },
     { code: "109", name: "小柴胡湯加桔梗石膏", target: "yin_def", pattern: "中間証", tags: ["扁桃炎", "急性咽喉頭炎", "喉の激痛", "発熱"], herbs: "小柴胡湯 + 桔梗, 石膏" },
     { code: "28", name: "越婢加朮湯（えっぴかじゅつとう）", target: "yin_def", pattern: "実証", tags: ["関節リウマチ", "変形性膝関節症", "ネフローゼ", "湿疹", "強い熱感・むくみ"], herbs: "麻黄, 石膏, 白朮, 生姜, 大棗, 甘草" },
     { code: "22", name: "消風散（しょうふうさん）", target: "yin_def", pattern: "中間〜実証", tags: ["分泌物の多い湿疹", "アトピー性皮膚炎", "じんましん", "水虫", "激しいかゆみ"], herbs: "当帰, 地黄, 石膏, 知母, 木通, 胡麻, 苦参, 防風, 荊芥, 蝉退, 牛蒡子, 蒼朮, 甘草" },
     { code: "90", name: "清肺湯（せいはいとう）", target: "yin_def", pattern: "中間証", tags: ["粘調な黄色い痰", "激しい咳", "慢性気管支炎", "タバコ咳"], herbs: "黄芩, 桔梗, 茯苓, 当帰, 貝母, 山梔子, 陳皮, 大棗, 竹茹, 麦門冬, 五味子, 生姜, 杏仁, 桑白皮, 天門冬, 甘草" },
     { code: "91", name: "竹茹温胆湯（ちくじょうおんたんとう）", target: "yin_def", pattern: "中間証", tags: ["インフルエンザ・肺炎後の咳", "不眠", "精神不安", "微熱", "痰の切れ不良"], herbs: "柴胡, 半夏, 麦門冬, 茯苓, 桔梗, 竹茹, 陳皮, 黄連, 枳実, 生姜, 大棗, 甘草, 香附子" },
-    { code: "92", name: "滋陰至宝湯（じいんしほうとう）", target: "yin_def", pattern: "虚証", tags: ["慢性の咳・痰", "微熱", "食欲不振", "盗汗（寝汗）", "病後の体力消耗"], herbs: "当帰, 芍薬, 地黄, 白朮, 茯苓, 陳皮, 知母, 麦門冬, 貝母, 香附子, 柴胡, 地骨皮, 薄荷, 甘草" },
+    { code: "92", name: "滋陰至宝湯（じいんしほうとう）", target: "yin_def", pattern: "虚証", tags: ["慢性の咳・痰", "微熱", "食欲不振", "盗汗（寝汗）", "病後の体力消耗", "寝汗"], herbs: "当帰, 芍薬, 地黄, 白朮, 茯苓, 陳皮, 知母, 麦門冬, 貝母, 香附子, 柴胡, 地骨皮, 薄荷, 甘草" },
     { code: "93", name: "荊芥連翹湯（けいがいれんぎょうとう）", target: "yin_def", pattern: "中間証", tags: ["蓄膿症", "慢性鼻炎", "慢性扁桃炎", "にきび", "青白い皮膚"], herbs: "荊芥, 連翹, 防風, 当帰, 川芎, 芍薬, 地黄, 黄連, 黄芩, 黄柏, 山梔子, 桔梗, 柴胡, 枳実, 白芷, 甘草" },
     { code: "94", name: "清上防風湯（せいじょうぼうふうとう）", target: "yin_def", pattern: "実証", tags: ["化膿性のにきび", "顔面の赤み・炎症", "脂性肌", "酒さ"], herbs: "防風, 連翹, 桔梗, 黄連, 黄芩, 山梔子, 白芷, 枳実, 荊芥, 川芎, 薄荷, 甘草" },
     { code: "85", name: "神秘湯（しんぴとう）", target: "yin_def", pattern: "中間証", tags: ["小児喘息", "気管支喘息", "呼吸困難", "神経性咳"], herbs: "麻黄, 杏仁, 厚朴, 柴胡, 蘇葉, 陳皮, 甘草" },
@@ -658,7 +731,7 @@ const KAMPO_DATABASE = [
 document.getElementById('recordDate').valueAsDate = new Date();
 
 let currentPatientRecord = {
-    version: "4.3",
+    version: "5.1",
     clientInfo: { clientNo: "", clientName: "", clientAge: "", clientGender: "女性", clientSho: "all", staffName: "" },
     visits: []
 };
@@ -666,13 +739,13 @@ let currentPatientRecord = {
 let activeVisitIndex = null;
 
 const categories = [
-    { key: 'qi_def', label: '気虚', max: 2, name: '気虚（エネルギー不足）' },
-    { key: 'qi_stag', label: '気滞', max: 2, name: '気滞（ストレス・気の巡りストップ）' },
-    { key: 'blood_def', label: '血虚', max: 2, name: '血虚（うるおい・栄養不足）' },
-    { key: 'blood_stag', label: '瘀血', max: 2, name: '瘀血（血行不良・コリ冷え）' },
-    { key: 'water', label: '水滞', max: 2, name: '水滞（水分停滞・むくみ）' },
-    { key: 'yang_def', label: '陽虚', max: 1, name: '陽虚（深部の冷え）' },
-    { key: 'yin_def', label: '陰虚', max: 1, name: '陰虚（ほてり・熱こもり）' }
+    { key: 'qi_def', label: '気虚', max: 4, name: '気虚（エネルギー不足）' },
+    { key: 'qi_stag', label: '気滞', max: 4, name: '気滞（ストレス・気の巡りストップ）' },
+    { key: 'blood_def', label: '血虚', max: 4, name: '血虚（うるおい・栄養不足）' },
+    { key: 'blood_stag', label: '瘀血', max: 4, name: '瘀血（血行不良・コリ冷え）' },
+    { key: 'water', label: '水滞', max: 4, name: '水滞（水分停滞・むくみ）' },
+    { key: 'yang_def', label: '陽虚', max: 2, name: '陽虚（深部の冷え）' },
+    { key: 'yin_def', label: '陰虚', max: 2, name: '陰虚（ほてり・熱こもり）' }
 ];
 
 const careMap = {
@@ -685,7 +758,6 @@ const careMap = {
     yin_def: '辛いものを控え、白きくらげや山芋など潤いを補う食材を摂りましょう。'
 };
 
-// ページ読み込み時に処方セレクトボックスを必ず構築
 window.addEventListener('DOMContentLoaded', () => {
     initFormulaDropdowns();
 });
@@ -705,6 +777,101 @@ function initFormulaDropdowns() {
             subSel.add(new Option(`${item.name} (${item.code})`, item.code));
         });
     }
+}
+
+// リアルタイムおすすめ処方サジェスト（最大10件表示＆主/併用ワンクリックセット）
+function updateRealtimeSuggestions() {
+    const suggestListDiv = document.getElementById('realtimeSuggestList');
+    if (!suggestListDiv) return;
+
+    const checkedBoxes = document.querySelectorAll('#kampoForm input[type="checkbox"]:checked');
+    if (checkedBoxes.length === 0) {
+        suggestListDiv.innerHTML = '<span style="color:#888;">（上の症状にチェックを入れるとおすすめが表示されます）</span>';
+        return;
+    }
+
+    const userSho = document.getElementById('clientSho').value;
+    
+    const targetScores = {};
+    categories.forEach(c => targetScores[c.key] = 0);
+    
+    const checkedKeywords = [];
+    checkedBoxes.forEach(cb => {
+        const cat = cb.getAttribute('data-cat');
+        if (cat && targetScores[cat] !== undefined) targetScores[cat]++;
+        
+        const kwAttr = cb.getAttribute('data-kw');
+        if (kwAttr) {
+            kwAttr.split(',').forEach(k => checkedKeywords.push(k.trim()));
+        }
+    });
+
+    const scoredFormulas = KAMPO_DATABASE.map(item => {
+        let matchScore = 0;
+        if (targetScores[item.target] > 0) {
+            matchScore += targetScores[item.target] * 3;
+        }
+        if (userSho !== 'all') {
+            if (item.pattern.includes(userSho)) matchScore += 2;
+        }
+        if (Array.isArray(item.tags)) {
+            item.tags.forEach(tag => {
+                checkedKeywords.forEach(kw => {
+                    if (tag.includes(kw) || kw.includes(tag)) matchScore += 1.5;
+                });
+            });
+        }
+        return { ...item, score: matchScore };
+    });
+
+    scoredFormulas.sort((a, b) => b.score - a.score);
+    // 最大10件まで拡大
+    const topSuggestions = scoredFormulas.filter(f => f.score > 0).slice(0, 10);
+
+    if (topSuggestions.length === 0) {
+        suggestListDiv.innerHTML = '<span style="color:#888;">該当する処方候補がありません。</span>';
+        return;
+    }
+
+    let suggestHtml = `
+        <table class="suggested-table">
+            <thead>
+                <tr>
+                    <th>処方名</th>
+                    <th>証（体力）</th>
+                    <th>適応症状・キーワード</th>
+                    <th style="text-align:center; min-width:140px;">ワンクリックセット</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    topSuggestions.forEach(f => {
+        const badgeClass = f.pattern.includes('虚') ? 'badge-kyo' : (f.pattern.includes('実') ? 'badge-jitsu' : 'badge-chu');
+        suggestHtml += `
+            <tr>
+                <td><strong>${f.name}</strong> (${f.code})</td>
+                <td><span class="badge ${badgeClass}">${f.pattern}</span></td>
+                <td style="font-size:10.5px; color:#555;">${f.tags.join('、')}</td>
+                <td style="text-align:center;">
+                    <button type="button" class="btn-apply-main" onclick="setFormula('main', '${f.code}')">主処方にセット 💊</button>
+                    <button type="button" class="btn-apply-sub" onclick="setFormula('sub', '${f.code}')">併用処方にセット ➕</button>
+                </td>
+            </tr>
+        `;
+    });
+    suggestHtml += '</tbody></table>';
+    suggestListDiv.innerHTML = suggestHtml;
+}
+
+// 主処方または併用処方にセットする関数
+function setFormula(type, code) {
+    if (type === 'main') {
+        document.getElementById('mainFormulaSelect').value = code;
+    } else {
+        document.getElementById('subFormulaSelect').value = code;
+    }
+    checkSafetyAndCalc();
 }
 
 function setNextDate(daysLater) {
@@ -752,8 +919,8 @@ function checkSafetyAndCalc() {
     }
 
     let dispenseHtml = `<strong>💊 処方・調剤日数計算 (${days}日分):</strong><br>`;
-    if (mainF) dispenseHtml += `・主処方: ${mainF.name} (ツムラ${mainF.code}) × ${days}日分<br>`;
-    if (subF) dispenseHtml += `・併用処方: ${subF.name} (ツムラ${subF.code}) × ${days}日分<br>`;
+    if (mainF) dispenseHtml += `・主処方: <strong>${mainF.name}</strong> (ツムラ${mainF.code}) × ${days}日分<br>`;
+    if (subF) dispenseHtml += `・併用処方: <strong>${subF.name}</strong> (ツムラ${subF.code}) × ${days}日分<br>`;
     dispenseHtml += `<span style="color:#666;">※ 煎じ薬の場合は水600mlで約半量まで30〜40分弱火で煎じ、1日2〜3回食前空腹時に服用。</span>`;
     document.getElementById('dispenseResultBox').innerHTML = dispenseHtml;
     document.getElementById('dispenseResultBox').style.display = 'block';
@@ -855,6 +1022,7 @@ function renderHistoryTimeline() {
         document.getElementById('kampoForm').reset();
         document.getElementById('memoInput').value = '';
         document.getElementById('result-wrapper').style.display = 'none';
+        updateRealtimeSuggestions();
         renderHistoryTimeline();
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -905,6 +1073,7 @@ function loadVisitByIndex(index) {
     }
     document.getElementById('memoInput').value = visit.memo || '';
 
+    updateRealtimeSuggestions();
     renderHistoryTimeline();
     analyzeAndGenerateReport();
 }
@@ -1210,9 +1379,10 @@ function resetForm() {
     document.getElementById('memoInput').value = '';
     document.getElementById('nextVisitDate').value = '';
     activeVisitIndex = null;
-    currentPatientRecord = { version: "4.3", clientInfo: {}, visits: [] };
+    currentPatientRecord = { version: "5.1", clientInfo: {}, visits: [] };
     document.getElementById('historyTimelineBox').style.display = 'none';
     initFormulaDropdowns();
+    updateRealtimeSuggestions();
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 </script>
